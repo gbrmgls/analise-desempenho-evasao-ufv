@@ -1,0 +1,20 @@
+.App {
+    display: flex;
+    flex-direction: column;
+    padding: 3rem;
+}
+
+.App > .selects {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 3em;
+}
+
+.App > .grafico {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: coral;
+    height: 36.34rem;
+}
