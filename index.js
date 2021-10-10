@@ -16,11 +16,13 @@ app.use((req, res, next) => {
     next();
 });
 
+// Serving frontend
 app.use(express.static(path.join(__dirname, "/front/build")))
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "/front/build", "index.html"))
 })
 
+// Backend routes
 app.use("/route_example", require("./routes/route_example.js"))
 
 
