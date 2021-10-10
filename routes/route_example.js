@@ -9,7 +9,7 @@ router.get("/", (req, res, next) => {
 router.get("/bd_ufv", (req, res, next) => {
     db.raw("SELECT * FROM Campus")
         .then((data) => {
-            res.send(data);
+            res.send(data[0]);
         }).catch(err => {
             console.log(err)
             res.send(err);

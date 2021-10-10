@@ -1,5 +1,4 @@
 require('dotenv').config();
-require('sqlite3')
 
 const knex = require("knex")({
     client: "mysql",

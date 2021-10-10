@@ -1,14 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
+import axios from 'axios';
 
 function App() {
+        const [campi, setCampi] = useState([]);
+        const [foto, setFoto] = useState('');
+
+        const getCampi = async() => {
+            const res = await axios.get(`/route_example/bd_ufv`);
+            const campi = res.data.map(campus => (
+                {
+                    ...campus,
+                    Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))
+                }
+            )).sort((a,b) => a.Nome.localeCompare(b.Nome));
+            setCampi(campi);
+            setFoto(`data:image/png;base64,${campi[0].Foto}`);
+        };
+
+        const handleChangeCampiSelect = (e) => {
+            const campusSelecionado = campi.find(campus => campus.SiglaCamp === e.target.value);
+            setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
+        }
+
+        useEffect(() => {
+            getCampi();
+        }, []);
+
         return (
             <div className="App">
                 <div className="selects">
-                    <select className="campi">
-                        <option value="vicosa">Vicosa</option>
-                        <option value="florestal">Florestal</option>
-                        <option value="rio_paranaiba">Rio Paranaiba</option>
+                    <select className="campi" onChange={handleChangeCampiSelect}>
+                        {campi.length > 0 ? 
+                            campi.map(campus => 
+                                <option key={campus.SiglaCamp} value={campus.SiglaCamp}>{campus.Nome}</option>
+                            ) : 
+                            <option value="">Carregando...</option>
+                        }
                     </select>
 
                     <select className="cursos">
@@ -27,6 +55,7 @@ function App() {
 
                 <div className="grafico">
                     GRAFICO
+                    {foto !== '' && <img src={foto} alt=""/>}
                 </div>
             </div>
         );
