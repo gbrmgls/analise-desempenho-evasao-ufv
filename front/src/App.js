@@ -1,26 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import axios from 'axios';
+import { Bar } from 'react-chartjs-2';
 
 function App() {
         const [campi, setCampi] = useState([]);
+        const [departamentos, setDepartamentos] = useState([]);
         const [foto, setFoto] = useState('');
+        const [grafico, setGrafico] = useState([]);
 
         const getCampi = async() => {
-            const res = await axios.get(`/route_example/bd_ufv`);
+            const res = await axios.get(`/route_example/campi`);
             const campi = res.data.map(campus => (
                 {
                     ...campus,
-                    Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))
+                    Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data))),
+                    dados: Array.from({length: 6}, () => Math.floor(Math.random() * 10))
                 }
             )).sort((a,b) => a.Nome.localeCompare(b.Nome));
             setCampi(campi);
-            setFoto(`data:image/png;base64,${campi[0].Foto}`);
+            setGrafico(campi[0].dados);
+            // setFoto(`data:image/png;base64,${campi[0].Foto}`);
+        };
+
+        const getDepartamentos = async() => {
+            const res = await axios.get(`/route_example/departamentos`);
+            const departamentos = res.data;
+            setDepartamentos(departamentos);
         };
 
         const handleChangeCampiSelect = (e) => {
             const campusSelecionado = campi.find(campus => campus.SiglaCamp === e.target.value);
-            setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
+            // setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
+            setGrafico(campusSelecionado.dados);
         }
 
         useEffect(() => {
@@ -53,9 +65,53 @@ function App() {
 
                 </div>
 
-                <div className="grafico">
+                {/* <div className="grafico">
                     GRAFICO
                     {foto !== '' && <img src={foto} alt=""/>}
+                </div> */}
+                <div className="grafico1">
+                    <Bar
+                        data={{
+                            labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                            datasets: grafico.length > 0 ? [{
+                                label: '# of Votes',
+                                categoryPercentage: .5,
+                                barPercentage: 1,
+                                // barThickness: 20,
+                                // maxBarThickness: 20,
+                                // minBarLength: 2,
+                                data: grafico,
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 1)',
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(255, 206, 86, 1)',
+                                    'rgba(75, 192, 192, 1)',
+                                    'rgba(153, 102, 255, 1)',
+                                    'rgba(255, 159, 64, 1)'
+                                ],
+                                // borderColor: [
+                                //     'rgba(255, 99, 132, 1)',
+                                //     'rgba(54, 162, 235, 1)',
+                                //     'rgba(255, 206, 86, 1)',
+                                //     'rgba(75, 192, 192, 1)',
+                                //     'rgba(153, 102, 255, 1)',
+                                //     'rgba(255, 159, 64, 1)'
+                                // ],
+                                // borderWidth: 1
+                            }] : []
+                        }}
+                        height={100}
+                        // width={100}
+                        options= {{
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                },
+                            },
+                        }}
+                    />
                 </div>
             </div>
         );

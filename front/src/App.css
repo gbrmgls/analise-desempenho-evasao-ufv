@@ -1,14 +1,15 @@
 .App {
     display: flex;
     flex-direction: column;
-    padding: 3rem;
+    padding: 0 3rem;
+    height: 100%;
 }
 
 .App > .selects {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    margin-bottom: 3em;
+    margin: 3em 0;
 }
 
 .App > .grafico {
@@ -18,4 +19,14 @@
     align-items: center;
     background: coral;
     height: 36.34rem;
+}
+
+.App > .grafico1 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    border-radius: 16px;
+    padding: 5rem 10rem;
 }
