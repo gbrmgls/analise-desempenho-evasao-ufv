@@ -7,31 +7,58 @@ function App() {
         const [campi, setCampi] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
         const [foto, setFoto] = useState('');
-        const [grafico, setGrafico] = useState([]);
+        const [grafico, setGrafico] = useState({
+            label: '',
+            labels: [],
+            data: [{
+                value: 0,
+                color: ''
+            }],
+            isLoaded: false
+        });
 
         const getCampi = async() => {
-            const res = await axios.get(`/route_example/campi`);
-            const campi = res.data.map(campus => (
-                {
-                    ...campus,
-                    Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data))),
-                    dados: Array.from({length: 6}, () => Math.floor(Math.random() * 10))
-                }
-            )).sort((a,b) => a.Nome.localeCompare(b.Nome));
-            setCampi(campi);
-            setGrafico(campi[0].dados);
-            // setFoto(`data:image/png;base64,${campi[0].Foto}`);
+            try {
+                const res = await axios.get(`/route_example/bd_ufv`);
+                const campi = res.data.map(campus => (
+                    {
+                        ...campus,
+                        Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data))),
+                        dados: Array.from({length: 6}, () => Math.floor(Math.random() * 10))
+                    }
+                )).sort((a,b) => a.nome.localeCompare(b.nome));
+
+                setCampi(campi);
+
+                setGrafico({
+                    labels: campi.map(campus => campus.nome),
+                    label: 'Porcentagem de aprovação por Campus',
+                    data: campi.map(campus => {
+                        const aprovados = campus['SUM(Turma.Aprovados)'];
+                        const numEstudantes = campus['SUM(Turma.NumEstudantes)'];
+                        return {
+                            value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                            color: 'rgba(75, 192, 192, 1)'
+                        };
+                    }),
+                    isLoaded: true
+                });
+
+                setFoto(`data:image/png;base64,${campi[0].Foto}`);
+            } catch {
+                return;
+            }
         };
 
-        const getDepartamentos = async() => {
-            const res = await axios.get(`/route_example/departamentos`);
-            const departamentos = res.data;
-            setDepartamentos(departamentos);
-        };
+        // const getDepartamentos = async() => {
+        //     const res = await axios.get(`/route_example/departamentos`);
+        //     const departamentos = res.data;
+        //     setDepartamentos(departamentos);
+        // };
 
         const handleChangeCampiSelect = (e) => {
             const campusSelecionado = campi.find(campus => campus.SiglaCamp === e.target.value);
-            // setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
+            setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
             setGrafico(campusSelecionado.dados);
         }
 
@@ -45,7 +72,7 @@ function App() {
                     <select className="campi" onChange={handleChangeCampiSelect}>
                         {campi.length > 0 ? 
                             campi.map(campus => 
-                                <option key={campus.SiglaCamp} value={campus.SiglaCamp}>{campus.Nome}</option>
+                                <option key={campus.SiglaCamp} value={campus.SiglaCamp}>{campus.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
                         }
@@ -72,23 +99,16 @@ function App() {
                 <div className="grafico1">
                     <Bar
                         data={{
-                            labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-                            datasets: grafico.length > 0 ? [{
-                                label: '# of Votes',
+                            labels: grafico.isLoaded ? grafico.labels : [],
+                            datasets: grafico.isLoaded ? [{
+                                label: grafico.label,
                                 categoryPercentage: .5,
                                 barPercentage: 1,
                                 // barThickness: 20,
-                                // maxBarThickness: 20,
+                                // maxBarThickness: 20,s
                                 // minBarLength: 2,
-                                data: grafico,
-                                backgroundColor: [
-                                    'rgba(255, 99, 132, 1)',
-                                    'rgba(54, 162, 235, 1)',
-                                    'rgba(255, 206, 86, 1)',
-                                    'rgba(75, 192, 192, 1)',
-                                    'rgba(153, 102, 255, 1)',
-                                    'rgba(255, 159, 64, 1)'
-                                ],
+                                data: grafico.data.map(e => e.value),
+                                backgroundColor: grafico.data.map(e => e.color),
                                 // borderColor: [
                                 //     'rgba(255, 99, 132, 1)',
                                 //     'rgba(54, 162, 235, 1)',
