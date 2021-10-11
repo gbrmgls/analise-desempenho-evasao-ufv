@@ -7,7 +7,13 @@ router.get("/", (req, res, next) => {
 });
 
 router.get("/bd_ufv", (req, res, next) => {
-    db.raw("SELECT * FROM Campus")
+    db.raw(`SELECT Campus.nome, SUM(Turma.NumEstudantes) , SUM(Turma.Aprovados) 
+            FROM Campus 
+            LEFT JOIN Curso 
+            ON Campus.SiglaCamp = Curso.SiglaCamp
+            LEFT JOIN Turma
+            ON Turma.CodCurso = Curso.CodCurso
+            GROUP BY Campus.nome`)
         .then((data) => {
             res.send(data[0]);
         }).catch(err => {
