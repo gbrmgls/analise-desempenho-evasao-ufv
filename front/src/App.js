@@ -65,7 +65,7 @@ const disciplinasCursoToGraph = (disciplinas, nomeCampus, nomeCurso) => {
 const turmasDisciplinaToGraph = (disciplina, nomeDisciplina, nomeCampus, nomeCurso) => {
     console.log("TESTE -->", Object.keys(disciplina).filter(key => key !== 'CodCurso' && key !== 'CodDisc'))
     return {
-        labels: ['Notas0a10', 'Notas10a20', 'Notas20a30', 'Notas30a40', 'Notas40a50', 'Notas50a60', 'Notas60a70', 'Notas70a80', 'Notas80a90', 'Notas90a100'],
+        labels: ['Notas 0-10', 'Notas 10-20', 'Notas 20-30', 'Notas 30-40', 'Notas 40-50', 'Notas 50-60', 'Notas 60-70', 'Notas 70-80', 'Notas 80-90', 'Notas 90-100'],
         label: 'Notas de ' + nomeDisciplina + ' do Curso de ' + nomeCurso + ' do ' + nomeCampus,
         data: Object.keys(disciplina).filter(key => key !== 'CodCurso' && key !== 'CodDisc')
             .map(key => {
@@ -108,7 +108,7 @@ function App() {
                         ...campus,
                         Foto: `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))}`
                     }
-                )).sort((a,b) => a.nome.localeCompare(b.nome));
+                ))//.sort((a,b) => a.nome.localeCompare(b.nome));
                 console.log(campi)
                 setCampi(campi);
 
@@ -143,7 +143,7 @@ function App() {
         const getCursosCampus = async(campusNome) => {
             try {
                 const res = await axios.get(`/route_example/bd_ufv/${campusNome}`);
-                const cursos = res.data.sort((a,b) => a.nome.localeCompare(b.nome));
+                const cursos = res.data//.sort((a,b) => a.nome.localeCompare(b.nome));
                 setCursos(cursos);
 
                 return cursos;
@@ -155,7 +155,7 @@ function App() {
         const getDisciplinasCurso = async(campusNome, cursoNome) => {
             try {
                 const res = await axios.get(`/route_example/bd_ufv/${campusNome}/${cursoNome}`);
-                const disciplinas = res.data.sort((a,b) => a.nome.localeCompare(b.nome));
+                const disciplinas = res.data//.sort((a,b) => a.nome.localeCompare(b.nome));
                 setDisciplinas(disciplinas);
 
                 return disciplinas;
@@ -167,7 +167,7 @@ function App() {
         const getNotasDisciplina = async(curso, disciplina) => {
             try {
                 const res = await axios.get(`/route_example/bd_ufv/disciplina/${curso}/${disciplina}/`);
-                const notas = res.data.sort((a,b) => a.nome.localeCompare(b.nome))[0];
+                const notas = res.data//.sort((a,b) => a.nome.localeCompare(b.nome))[0];
                 setTurmas(notas);
 
                 return notas;
@@ -232,7 +232,7 @@ function App() {
             
             const disciplinaNotas = await getNotasDisciplina(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
             console.log(disciplinaNotas);
-            setGrafico(turmasDisciplinaToGraph(disciplinaNotas, disciplinaSelecionada.nome, selectedCampus.nome, disciplinaSelecionada.nome));
+            setGrafico(turmasDisciplinaToGraph(disciplinaNotas, disciplinaSelecionada.nome, selectedCampus.nome, selectedCurso.nome));
         };
 
         const handleChangeDeptosSelect = async (e) => {
@@ -333,7 +333,7 @@ function App() {
                                 </div>
                             </div>
                             {campi.length > 0 ? 
-                                campi.map(campus => 
+                                campi.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map(campus => 
                                     <div className="campus" onClick={() => (handleChangeCampiSelect(campus.SiglaCamp), setDisplayCampusOptions(!displayCampusOptions))}>
                                         <div className="foto">
                                             <img src={campus.Foto} alt="" />
@@ -351,9 +351,9 @@ function App() {
                     { selectedCampus?.SiglaCamp == "CAV" ?
                     <select className="departamentos" onChange={handleChangeDeptosSelect}>
                         <option value="">Selecione um Departamento</option>
-                        {departamentos.length > 0 ? 
+                        {departamentos.map((x) => x).length > 0 ? 
                             [<option value="Todos">Todos</option>].concat(
-                            departamentos.map(depto => 
+                            departamentos.sort((a,b) => a.Nome.localeCompare(b.Nome)).map(depto => 
                                 <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.Nome}</option>
                             )) : 
                             <option value="">Carregando...</option>
@@ -364,7 +364,7 @@ function App() {
                     <select className="cursos" onChange={handleChangeCursosSelect}>
                         <option value="">Selecione um Curso</option>
                         {cursos.length > 0 ? 
-                            cursos.map(curso => 
+                            cursos.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map(curso => 
                                 <option key={curso.CodCurso} value={curso.CodCurso}>{curso.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
@@ -374,8 +374,8 @@ function App() {
                     <select className="disciplinas" onChange={handleChangeDisciplinasSelect}>
                         <option value="">Selecione uma Disciplina</option>
                         {disciplinas.length > 0 ? 
-                            disciplinas.map(disciplina => 
-                                <option key={disciplina.CodDisc + `${disciplina.CodCurso}`} value={disciplina.CodDisc}>{disciplina.nome}</option>
+                            disciplinas.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map(disciplina => 
+                                <option key={disciplina.CodDisc + disciplina.CodCurso} value={disciplina.CodDisc}>{disciplina.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
                         }
