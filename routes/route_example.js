@@ -61,23 +61,6 @@ router.get("/bd_ufv/departamento/:depto/:ano", (req, res, next) => {
 });
 
 router.get("/bd_ufv/:campus", (req, res, next) => {
-    db.raw(`SELECT Curso.nome, SUM(Turma.NumEstudantes) , SUM(Turma.Aprovados) 
-            FROM Campus 
-            LEFT JOIN Curso 
-            ON Campus.SiglaCamp = Curso.SiglaCamp
-            LEFT JOIN Turma
-            ON Turma.CodCurso = Curso.CodCurso
-            WHERE Campus.SiglaCamp = "${req.params.campus}"
-            GROUP BY Curso.CodCurso`)
-        .then((data) => {
-            res.send(data[0]);
-        }).catch(err => {
-            console.log(err)
-            res.send(err);
-        })
-});
-
-router.get("/bd_ufv/:campus", (req, res, next) => {
     db.raw(`SELECT Curso.CodCurso, Curso.nome, SUM(Turma.NumEstudantes) , SUM(Turma.Aprovados) 
             FROM Campus 
             LEFT JOIN Curso 
