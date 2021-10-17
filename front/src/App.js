@@ -63,16 +63,13 @@ function App() {
                 const campi = res.data.map(campus => (
                     {
                         ...campus,
-                        Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data))),
-                        dados: Array.from({length: 6}, () => Math.floor(Math.random() * 10))
+                        Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))
                     }
                 )).sort((a,b) => a.nome.localeCompare(b.nome));
 
                 setCampi(campi);
 
                 setGrafico(campiToGraph(campi));
-
-                setFoto(`data:image/png;base64,${campi[0].Foto}`);
             } catch {
                 return;
             }
@@ -92,12 +89,12 @@ function App() {
         };
 
         const handleChangeCampiSelect = async (e) => {
-            setGrafico(initialGraph);
             if(e.target.value === "") {
                 setSelectedCampus(undefined);
                 setGrafico(campiToGraph(campi));
                 return;
             }
+
             const campusSelecionado = campi.find(campus => campus.SiglaCamp === e.target.value);
             setSelectedCampus(campusSelecionado);
             setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
@@ -137,10 +134,6 @@ function App() {
 
                 </div>
 
-                {/* <div className="grafico">
-                    GRAFICO
-                    {foto !== '' && <img src={foto} alt=""/>}
-                </div> */}
                 <div className="grafico1">
                     <Bar
                         data={{
