@@ -318,6 +318,15 @@ function App() {
                         }}
                     />
                 </div>
+
+                <div className="info">
+                    Info:
+                    { selectedCampus != undefined ?
+                        <div className="infoCampus">
+                            <a>Informações do Campus</a>
+                        </div> : ''
+                    }
+                </div>
             </div>
         );
 }
