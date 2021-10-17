@@ -45,10 +45,26 @@ const cursosCampusToGraph = (cursos, nomeCampus) => {
     }
 };
 
+const disciplinasCursoToGraph = (disciplinas, nomeCampus, nomeCurso) => {
+    return {
+        labels: disciplinas.map(disciplina => disciplina.nome),
+        label: 'Porcentagem de aprovação por Disciplina do Curso de ' + nomeCurso + ' do ' + nomeCampus,
+        data: disciplinas.map(disciplina => {
+            const aprovados = disciplina['SUM(Turma.Aprovados)'];
+            const numEstudantes = disciplina['SUM(Turma.NumEstudantes)'];
+            return {
+                value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                color: 'rgba(75, 192, 192, 1)'
+            };
+        }),
+        isLoaded: true
+    }
+};
+
 function App() {
         const [campi, setCampi] = useState([]);
         const [cursos, setCursos] = useState([]);
-        const [disciplinas, setDisciplina] = useState([]);
+        const [disciplinas, setDisciplinas] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
         const [foto, setFoto] = useState('');
         const [selectedCampus, setSelectedCampus] = useState(undefined);
@@ -66,7 +82,7 @@ function App() {
                         Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))
                     }
                 )).sort((a,b) => a.nome.localeCompare(b.nome));
-
+                console.log(campi)
                 setCampi(campi);
 
                 setGrafico(campiToGraph(campi));
@@ -79,10 +95,21 @@ function App() {
             try {
                 const res = await axios.get(`/route_example/bd_ufv/${campusNome}`);
                 const cursos = res.data.sort((a,b) => a.nome.localeCompare(b.nome));
-
-                setSelectedCampus(cursos);
+                setCursos(cursos);
 
                 return cursos;
+            } catch {
+                return;
+            }
+        };
+
+        const getDisciplinasCurso = async(campusNome, cursoNome) => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/${campusNome}/${cursoNome}`);
+                const disciplinas = res.data.sort((a,b) => a.nome.localeCompare(b.nome));
+                setDisciplinas(disciplinas);
+
+                return disciplinas;
             } catch {
                 return;
             }
@@ -103,6 +130,21 @@ function App() {
             setGrafico(cursosCampusToGraph(cursosCampus, campusSelecionado.nome));
         };
 
+        const handleChangeCursosSelect = async (e) => {
+            if(e.target.value === "") {
+                setSelectedCurso(undefined);
+                setGrafico(cursosCampusToGraph(cursos, selectedCampus.nome));
+                return;
+            }
+
+            const cursoSelecionado = cursos.find(curso => curso.CodCurso === Number(e.target.value));
+            setSelectedCurso(cursoSelecionado);
+            
+            const disciplinasCurso = await getDisciplinasCurso(selectedCampus.SiglaCamp, cursoSelecionado.CodCurso);
+            console.log(disciplinasCurso);
+            setGrafico(disciplinasCursoToGraph(disciplinasCurso, selectedCampus.nome, cursoSelecionado.nome));
+        };
+
         useEffect(() => {
             getCampi();
         }, []);
@@ -120,10 +162,14 @@ function App() {
                         }
                     </select>
 
-                    <select className="cursos">
-                        <option value="curso1">curso1</option>
-                        <option value="curso2">curso2</option>
-                        <option value="curso3">curso3</option>
+                    <select className="cursos" onChange={handleChangeCursosSelect}>
+                        <option value="">Selecione um Curso</option>
+                        {cursos.length > 0 ? 
+                            cursos.map(curso => 
+                                <option key={curso.CodCurso} value={curso.CodCurso}>{curso.nome}</option>
+                            ) : 
+                            <option value="">Carregando...</option>
+                        }
                     </select>
 
                     <select className="disciplinas">
