@@ -82,7 +82,7 @@ function App() {
                 const campi = res.data.map(campus => (
                     {
                         ...campus,
-                        Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))
+                        Foto: `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))}`
                     }
                 )).sort((a,b) => a.nome.localeCompare(b.nome));
                 console.log(campi)
@@ -119,15 +119,15 @@ function App() {
         };
 
         const handleChangeCampiSelect = async (e) => {
-            if(e.target.value === "") {
+            if(e === "") {
                 setSelectedCampus(undefined);
                 setGrafico(campiToGraph(campi));
                 return;
             }
 
-            const campusSelecionado = campi.find(campus => campus.SiglaCamp === e.target.value);
+            const campusSelecionado = campi.find(campus => campus.SiglaCamp === e);
             setSelectedCampus(campusSelecionado);
-            setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
+            setFoto(campusSelecionado.Foto);
 
             const cursosCampus = await getCursosCampus(campusSelecionado.SiglaCamp);
             setGrafico(cursosCampusToGraph(cursosCampus, campusSelecionado.nome));
@@ -168,24 +168,37 @@ function App() {
                         <div className="toggleOptions" onClick={() => setDisplayCampusOptions(!displayCampusOptions)}>
                                 <div className="foto">
                                     {
-                                        selectedCampusOption !== ''?
-                                            <img src={foto} alt="" />
+                                        selectedCampus !== undefined ?
+                                            <img src={selectedCampus.Foto} alt="" />
                                         : <></>
                                     }
                                 </div>
                                 <div className="nome">
-                                    {selectedCampusOption}
+                                    {selectedCampus !== undefined ? selectedCampus.SiglaCamp : ''}
                                 </div>
                         </div>  
                         <div className="options" style={{'display' : displayCampusOptions? 'flex' : 'none'}}>
-                            <div className="campus" onClick={() => (setSelectedCampusOption(''), setDisplayCampusOptions(!displayCampusOptions))}>
+                            <div className="campus" onClick={() => (handleChangeCampiSelect(''), setDisplayCampusOptions(!displayCampusOptions))}>
                                 <div className="foto">
                                 </div>
                                 <div className="nome">
                                     Limpar
                                 </div>
                             </div>
-                            <div className="campus" onClick={() => (setSelectedCampusOption('CAF'), setDisplayCampusOptions(!displayCampusOptions))}>
+                            {campi.length > 0 ? 
+                                campi.map(campus => 
+                                    <div className="campus" onClick={() => (handleChangeCampiSelect(campus.SiglaCamp), setDisplayCampusOptions(!displayCampusOptions))}>
+                                        <div className="foto">
+                                            <img src={campus.Foto} alt="" />
+                                        </div>
+                                        <div className="nome">
+                                            {campus.SiglaCamp}
+                                        </div>
+                                    </div>
+                                ) : 
+                                <option value="">Carregando...</option>
+                            }
+                            {/* <div className="campus" onClick={() => (setSelectedCampusOption('CAF'), setDisplayCampusOptions(!displayCampusOptions))}>
                                 <div className="foto">
                                     <img src={foto} alt="" />
                                 </div>
@@ -208,7 +221,7 @@ function App() {
                                 <div className="nome">
                                     CRP
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 
