@@ -29,7 +29,7 @@ router.get("/bd_ufv/:campus", (req, res, next) => {
             ON Campus.SiglaCamp = Curso.SiglaCamp
             LEFT JOIN Turma
             ON Turma.CodCurso = Curso.CodCurso
-            WHERE Campus.nome = ${req.params.campus}
+            WHERE Campus.SiglaCamp = "${req.params.campus}"
             GROUP BY Curso.CodCurso`)
         .then((data) => {
             res.send(data[0]);

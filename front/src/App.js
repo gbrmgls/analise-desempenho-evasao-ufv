@@ -3,19 +3,59 @@ import './App.css';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 
+const initialGraph = {
+    label: '',
+    labels: [],
+    data: [{
+        value: 0,
+        color: ''
+    }],
+    isLoaded: false
+};
+
+const campiToGraph = (campi) => {
+    return {
+        labels: campi.map(campus => campus.nome),
+        label: 'Porcentagem de aprovação por Campus',
+        data: campi.map(campus => {
+            const aprovados = campus['SUM(Turma.Aprovados)'];
+            const numEstudantes = campus['SUM(Turma.NumEstudantes)'];
+            return {
+                value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                color: 'rgba(75, 192, 192, 1)'
+            };
+        }),
+        isLoaded: true
+    }
+};
+
+const cursosCampusToGraph = (cursos, nomeCampus) => {
+    return {
+        labels: cursos.map(curso => curso.nome),
+        label: 'Porcentagem de aprovação por Cursos do ' + nomeCampus,
+        data: cursos.map(curso => {
+            const aprovados = curso['SUM(Turma.Aprovados)'];
+            const numEstudantes = curso['SUM(Turma.NumEstudantes)'];
+            return {
+                value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                color: 'rgba(75, 192, 192, 1)'
+            };
+        }),
+        isLoaded: true
+    }
+};
+
 function App() {
         const [campi, setCampi] = useState([]);
+        const [cursos, setCursos] = useState([]);
+        const [disciplinas, setDisciplina] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
         const [foto, setFoto] = useState('');
-        const [grafico, setGrafico] = useState({
-            label: '',
-            labels: [],
-            data: [{
-                value: 0,
-                color: ''
-            }],
-            isLoaded: false
-        });
+        const [selectedCampus, setSelectedCampus] = useState(undefined);
+        const [selectedCurso, setSelectedCurso] = useState(undefined);
+        const [selectedDisciplina, setSelectedDisciplina] = useState(undefined);
+
+        const [grafico, setGrafico] = useState(initialGraph);
 
         const getCampi = async() => {
             try {
@@ -30,19 +70,7 @@ function App() {
 
                 setCampi(campi);
 
-                setGrafico({
-                    labels: campi.map(campus => campus.nome),
-                    label: 'Porcentagem de aprovação por Campus',
-                    data: campi.map(campus => {
-                        const aprovados = campus['SUM(Turma.Aprovados)'];
-                        const numEstudantes = campus['SUM(Turma.NumEstudantes)'];
-                        return {
-                            value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
-                            color: 'rgba(75, 192, 192, 1)'
-                        };
-                    }),
-                    isLoaded: true
-                });
+                setGrafico(campiToGraph(campi));
 
                 setFoto(`data:image/png;base64,${campi[0].Foto}`);
             } catch {
@@ -50,17 +78,33 @@ function App() {
             }
         };
 
-        // const getDepartamentos = async() => {
-        //     const res = await axios.get(`/route_example/departamentos`);
-        //     const departamentos = res.data;
-        //     setDepartamentos(departamentos);
-        // };
+        const getCursosCampus = async(campusNome) => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/${campusNome}`);
+                const cursos = res.data.sort((a,b) => a.nome.localeCompare(b.nome));
 
-        const handleChangeCampiSelect = (e) => {
+                setSelectedCampus(cursos);
+
+                return cursos;
+            } catch {
+                return;
+            }
+        };
+
+        const handleChangeCampiSelect = async (e) => {
+            setGrafico(initialGraph);
+            if(e.target.value === "") {
+                setSelectedCampus(undefined);
+                setGrafico(campiToGraph(campi));
+                return;
+            }
             const campusSelecionado = campi.find(campus => campus.SiglaCamp === e.target.value);
+            setSelectedCampus(campusSelecionado);
             setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
-            setGrafico(campusSelecionado.dados);
-        }
+
+            const cursosCampus = await getCursosCampus(campusSelecionado.SiglaCamp);
+            setGrafico(cursosCampusToGraph(cursosCampus, campusSelecionado.nome));
+        };
 
         useEffect(() => {
             getCampi();
@@ -70,6 +114,7 @@ function App() {
             <div className="App">
                 <div className="selects">
                     <select className="campi" onChange={handleChangeCampiSelect}>
+                        <option value="">Selecione um Campus</option>
                         {campi.length > 0 ? 
                             campi.map(campus => 
                                 <option key={campus.SiglaCamp} value={campus.SiglaCamp}>{campus.nome}</option>
