@@ -33,7 +33,7 @@ router.get("/bd_ufv/curso/:curso", (req, res, next) => {
             GROUP BY Disciplina.CodDisc, Disciplina.Nome
             ORDER BY sum(Turma.Aprovados)/sum(Turma.NumEstudantes)`)
         .then((data) => {
-            res.send(data);
+            res.send(data[0]);
         }).catch(err => {
             console.log(err)
             res.send(err);
@@ -45,7 +45,7 @@ router.get("/bd_ufv/departamento/", (req, res, next) => {
     db.raw(`SELECT Departamento.SiglaDepto, Departamento.Nome 
             FROM Departamento`)
         .then((data) => {
-            res.send(data);
+            res.send(data[0]);
         }).catch(err => {
             console.log(err)
             res.send(err);
@@ -58,7 +58,7 @@ router.get("/bd_ufv/departamento/contatos", (req, res, next) => {
             FROM Departamento
             NATURAL LEFT JOIN Contatos`)
         .then((data) => {
-            res.send(data);
+            res.send(data[0]);
         }).catch(err => {
             console.log(err)
             res.send(err);
@@ -75,7 +75,7 @@ router.get("/bd_ufv/departamento/:depto", (req, res, next) => {
             GROUP BY Disciplina.CodDisc, Disciplina.Nome
             ORDER BY sum(Turma.Aprovados)/sum(Turma.NumEstudantes)`)
         .then((data) => {
-            res.send(data);
+            res.send(data[0]);
         }).catch(err => {
             console.log(err)
             res.send(err);
@@ -95,7 +95,7 @@ router.get("/bd_ufv/departamento/:depto/:ano", (req, res, next) => {
             GROUP BY Disciplina.CodDisc, Disciplina.Nome
             ORDER BY sum(Turma.Aprovados)/sum(Turma.NumEstudantes)`)
         .then((data) => {
-            res.send(data);
+            res.send(data[0]);
         }).catch(err => {
             console.log(err)
             res.send(err);

@@ -243,8 +243,13 @@ function App() {
                 return;
             }
 
-            const cursoSelecionado = cursos.find(curso => curso.CodCurso === Number(e.target.value));
-            setSelectedCurso(cursoSelecionado);
+            
+            console.log(e.target.value);
+            const deptoSelecionado = departamentos.find(depto => depto.SiglaDepto == e.target.value);
+            console.log(deptoSelecionado);
+            setSelectedDepto(deptoSelecionado);
+
+            console.log(selectedDepto);
         }
 
         const openCampusModal = () => setModalCampusOpen(true);
@@ -289,9 +294,11 @@ function App() {
                         <h2>Contatos: </h2>
                         <ul>
                             {contatos.length > 0 && selectedDepto !== undefined ?
-                                contatos.find(cont => cont.SiglaDepto == selectedDepto.SilgaDepto).map(cont => 
-                                    <li>{cont.tel}</li>
-                                ) : "Esse departamento não possui contatos."
+                                contatos.filter(cont => cont.SiglaDepto == selectedDepto.SiglaDepto).map(cont => {
+                                    if(cont.tel == null) return "Esse departamento não possui contatos."
+                                    var strtel = cont.tel.toString()
+                                    return <li>{"(51) " + strtel.substring(0,4) + "-" + strtel.substring(4)}</li>
+                                }) : "Esse departamento não possui contatos."
                             }
                         </ul>
                     </div>
@@ -347,7 +354,7 @@ function App() {
                         <option value="">Selecione um Departamento</option>
                         {departamentos.length > 0 ? 
                             departamentos.map(depto => 
-                                <option key={depto.SiglaDepto} value={depto.SilgaDepto}>{depto.Nome}</option>
+                                <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.Nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
                         }
@@ -425,16 +432,17 @@ function App() {
 
                 <div className="info">
                     Info:
+
+                    <div className="infoCampus">
                     { selectedCampus != undefined ?
-                        <div className="infoCampus">
-                            <a style={{cursor: 'pointer'}} onClick={openCampusModal}>Informações do Campus</a>
-                        </div> : ''
+                            <a style={{cursor: 'pointer'}} onClick={openCampusModal}>Informações do Campus</a> : ''
                     }
+                    </div> 
+                    <div className="infoDepto">
                     { selectedDepto != undefined ?
-                        <div className="infoDepto">
-                            <a onClick={openDeptoModal}>Informações do Departamento</a>
-                        </div> : ''
+                            <a style={{cursor: 'pointer'}} onClick={openDeptoModal}>Informações do Departamento</a> : ''
                     }
+                    </div> 
                 </div>
             </div>
         );
