@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
+import Modal from 'react-modal';
 
 const initialGraph = {
     label: '',
@@ -69,12 +70,15 @@ function App() {
         const [cursos, setCursos] = useState([]);
         const [disciplinas, setDisciplinas] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
+        const [contatos, setContatos] = useState([]);
         const [foto, setFoto] = useState('');
         const [selectedCampus, setSelectedCampus] = useState(undefined);
         const [selectedCurso, setSelectedCurso] = useState(undefined);
         const [selectedDisciplina, setSelectedDisciplina] = useState(undefined);
 
         const [grafico, setGrafico] = useState(initialGraph);
+
+        const [modalCampusOpen, setModalCampusOpen] = useState(false);
 
         const getCampi = async() => {
             try {
@@ -89,6 +93,28 @@ function App() {
                 setCampi(campi);
 
                 setGrafico(campiToGraph(campi));
+            } catch {
+                return;
+            }
+        };
+
+        const getDepartamentos = async() => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/departamento`);
+                const deptos = res.data
+                console.log(deptos)
+                setDepartamentos(deptos)
+            } catch {
+                return;
+            }
+        };
+
+        const getContatos = async() => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/departamento/contatos`);
+                const conts = res.data
+                console.log(conts)
+                setContatos(conts)
             } catch {
                 return;
             }
@@ -148,12 +174,39 @@ function App() {
             setGrafico(disciplinasCursoToGraph(disciplinasCurso, selectedCampus.nome, cursoSelecionado.nome));
         };
 
+        const handleChangeDeptosSelect = async (e) => {
+
+        }
+
+        const openCampusModal = () => setModalCampusOpen(true);
+
+        const closeCampusModal = () => setModalCampusOpen(false);
+
         useEffect(() => {
             getCampi();
+            getDepartamentos();
+            getContatos();
         }, []);
 
         return (
             <div className="App">
+                <Modal
+                    isOpen={modalCampusOpen}
+                    contentLabel={selectedCampus == undefined ? "Selecione um campus" : selectedCampus.SiglaCamp + " - " + selectedCampus.nome}
+                >
+                    <h1>{selectedCampus == undefined ? "Selecione um campus" : selectedCampus.SiglaCamp + " - " + selectedCampus.nome}</h1>
+                    <button onClick={closeCampusModal}>Fechar</button>
+                    <div className="modalContent">
+                        <div className="modalFoto">
+                                    {
+                                        selectedCampus !== undefined ?
+                                            <img src={selectedCampus.Foto} alt="" />
+                                        : <></>
+                                    }
+                                </div>
+                        <h2>Endereço: {selectedCampus == undefined ? "" : selectedCampus.End}</h2>
+                    </div>
+                </Modal>
                 <div className="selects">
                     {/* <select className="campi" onChange={handleChangeCampiSelect}>
                         {campi.length > 0 ? 
@@ -224,6 +277,16 @@ function App() {
                             </div> */}
                         </div>
                     </div>
+                    
+                    <select className="departamentos" onChange={handleChangeDeptosSelect}>
+                        <option value="">Selecione um Departamento</option>
+                        {departamentos.length > 0 ? 
+                            departamentos.map(depto => 
+                                <option key={depto.SiglaDepto} value={depto.SilgaDepto}>{depto.Nome}</option>
+                            ) : 
+                            <option value="">Carregando...</option>
+                        }
+                    </select>
 
                     <select className="cursos" onChange={handleChangeCursosSelect}>
                         <option value="">Selecione um Curso</option>
@@ -285,7 +348,7 @@ function App() {
                     Info:
                     { selectedCampus != undefined ?
                         <div className="infoCampus">
-                            <a>Informações do Campus</a>
+                            <a onClick={openCampusModal}>Informações do Campus</a>
                         </div> : ''
                     }
                 </div>

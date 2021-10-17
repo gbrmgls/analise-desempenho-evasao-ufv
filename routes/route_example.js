@@ -8,7 +8,7 @@ router.get("/", (req, res, next) => {
 
 // Consulta envolvendo a junção de três ou mais relações
 router.get("/bd_ufv", (req, res, next) => {
-    db.raw(`SELECT Campus.SiglaCamp, Campus.nome, Campus.Foto, SUM(Turma.NumEstudantes) , SUM(Turma.Aprovados) 
+    db.raw(`SELECT Campus.SiglaCamp, Campus.nome, Campus.Endereço AS End, Campus.Foto, SUM(Turma.NumEstudantes) , SUM(Turma.Aprovados) 
             FROM Campus 
             LEFT JOIN Curso 
             ON Campus.SiglaCamp = Curso.SiglaCamp
