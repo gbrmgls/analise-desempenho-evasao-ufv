@@ -102,6 +102,34 @@ router.get("/bd_ufv/departamento/:depto/:ano", (req, res, next) => {
         })
 });
 
+router.get("/bd_ufv/disciplina/:curso/:disciplina/", (req, res, next) => {
+    db.raw(`SELECT Turma.CodDisc, Turma.CodCurso, sum(Turma.Notas0a10), sum(Turma.Notas10a20), sum(Turma.Notas20a30), sum(Turma.Notas30a40), sum(Turma.Notas40a50), sum(Turma.Notas50a60), sum(Turma.Notas60a70), sum(Turma.Notas70a80), sum(Turma.Notas80a90), sum(Turma.Notas90a100)
+            FROM Turma
+            WHERE Turma.CodDisc = '${req.params.disciplina}' AND
+            Turma.Codcurso = ${req.params.curso}
+            GROUP BY Turma.CodDisc, Turma.CodCurso`)
+        .then((data) => {
+            res.send(data[0]);
+        }).catch(err => {
+            console.log(err)
+            res.send(err);
+        })
+});
+
+router.get("/bd_ufv/disciplina/:curso/:disciplina/:ano/:semestre", (req, res, next) => {
+    db.raw(`SELECT * 
+            FROM Turma
+            WHERE Turma.CodDisc = '${req.params.disciplina}' AND
+            Turma.Codcurso = ${req.params.disciplina} AND
+            Turma.Ano = ${req.params.ano} AND Turma.Semestre = ${req.params.semestre}`)
+        .then((data) => {
+            res.send(data[0]);
+        }).catch(err => {
+            console.log(err)
+            res.send(err);
+        })
+});
+
 router.get("/bd_ufv/:campus", (req, res, next) => {
     db.raw(`SELECT Curso.CodCurso, Curso.nome, SUM(Turma.NumEstudantes) , SUM(Turma.Aprovados) 
             FROM Campus 
@@ -120,7 +148,7 @@ router.get("/bd_ufv/:campus", (req, res, next) => {
 });
 
 router.get("/bd_ufv/:campus/:curso", (req, res, next) => {
-    db.raw(`SELECT Disciplina.nome, SUM(Turma.NumEstudantes), SUM(Turma.Aprovados) 
+    db.raw(`SELECT Disciplina.CodDisc, Disciplina.nome, SUM(Turma.NumEstudantes), SUM(Turma.Aprovados) 
             FROM Campus 
             LEFT JOIN Curso 
             ON Campus.SiglaCamp = Curso.SiglaCamp

@@ -62,6 +62,22 @@ const disciplinasCursoToGraph = (disciplinas, nomeCampus, nomeCurso) => {
     }
 };
 
+const turmasDisciplinaToGraph = (disciplina, nomeDisciplina, nomeCampus, nomeCurso) => {
+    console.log("TESTE -->", Object.keys(disciplina).filter(key => key !== 'CodCurso' && key !== 'CodDisc'))
+    return {
+        labels: ['Notas0a10', 'Notas10a20', 'Notas20a30', 'Notas30a40', 'Notas40a50', 'Notas50a60', 'Notas60a70', 'Notas70a80', 'Notas80a90', 'Notas90a100'],
+        label: 'Notas de ' + nomeDisciplina + ' do Curso de ' + nomeCurso + ' do ' + nomeCampus,
+        data: Object.keys(disciplina).filter(key => key !== 'CodCurso' && key !== 'CodDisc')
+            .map(key => {
+                return {
+                    value: disciplina[key],
+                    color: 'rgba(75, 192, 192, 1)'
+                };
+            }),
+        isLoaded: true
+    }
+};
+
 function App() {
         const [campi, setCampi] = useState([]);
         const [displayCampusOptions, setDisplayCampusOptions] = useState(false);
@@ -69,6 +85,7 @@ function App() {
 
         const [cursos, setCursos] = useState([]);
         const [disciplinas, setDisciplinas] = useState([]);
+        const [turmas, setTurmas] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
         const [contatos, setContatos] = useState([]);
         const [foto, setFoto] = useState('');
@@ -76,6 +93,7 @@ function App() {
         const [selectedDepto, setSelectedDepto] = useState(undefined);
         const [selectedCurso, setSelectedCurso] = useState(undefined);
         const [selectedDisciplina, setSelectedDisciplina] = useState(undefined);
+        const [selectedTurma, setSelectedTurma] = useState(undefined);
 
         const [grafico, setGrafico] = useState(initialGraph);
 
@@ -146,9 +164,28 @@ function App() {
             }
         };
 
+        const getNotasDisciplina = async(curso, disciplina) => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/disciplina/${curso}/${disciplina}/`);
+                const notas = res.data.sort((a,b) => a.nome.localeCompare(b.nome))[0];
+                setTurmas(notas);
+
+                return notas;
+            } catch {
+                return;
+            }
+        };
+
         const handleChangeCampiSelect = async (e) => {
+            setSelectedCurso(undefined);
+            setSelectedDisciplina(undefined);
+            setCursos([]);
+            setDisciplinas([]);
+            setTurmas([]);
+
             if(e === "") {
                 setSelectedCampus(undefined);
+
                 setGrafico(campiToGraph(campi));
                 return;
             }
@@ -162,8 +199,12 @@ function App() {
         };
 
         const handleChangeCursosSelect = async (e) => {
+            setDisciplinas([]);
+            setTurmas([]);
+            setSelectedDisciplina(undefined);
             if(e.target.value === "") {
                 setSelectedCurso(undefined);
+
                 setGrafico(cursosCampusToGraph(cursos, selectedCampus.nome));
                 return;
             }
@@ -174,6 +215,23 @@ function App() {
             const disciplinasCurso = await getDisciplinasCurso(selectedCampus.SiglaCamp, cursoSelecionado.CodCurso);
             console.log(disciplinasCurso);
             setGrafico(disciplinasCursoToGraph(disciplinasCurso, selectedCampus.nome, cursoSelecionado.nome));
+        };
+
+        const handleChangeDisciplinasSelect = async (e) => {
+            setTurmas([]);
+            if(e.target.value === "") {
+                setSelectedDisciplina(undefined);
+
+                setGrafico(disciplinasCursoToGraph(disciplinas, selectedCampus.nome, selectedCurso.nome));
+                return;
+            }
+
+            const disciplinaSelecionada = disciplinas.find(disciplina => disciplina.CodDisc === e.target.value);
+            setSelectedDisciplina(disciplinaSelecionada);
+            
+            const disciplinaNotas = await getNotasDisciplina(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
+            console.log(disciplinaNotas);
+            setGrafico(turmasDisciplinaToGraph(disciplinaNotas, disciplinaSelecionada.nome, selectedCampus.nome, disciplinaSelecionada.nome));
         };
 
         const handleChangeDeptosSelect = async (e) => {
@@ -279,30 +337,6 @@ function App() {
                                 ) : 
                                 <option value="">Carregando...</option>
                             }
-                            {/* <div className="campus" onClick={() => (setSelectedCampusOption('CAF'), setDisplayCampusOptions(!displayCampusOptions))}>
-                                <div className="foto">
-                                    <img src={foto} alt="" />
-                                </div>
-                                <div className="nome">
-                                    CAF
-                                </div>
-                            </div>
-                            <div className="campus" onClick={() => (setSelectedCampusOption('CAV'), setDisplayCampusOptions(!displayCampusOptions))}>
-                                <div className="foto">
-                                    <img src={foto} alt="" />
-                                </div>
-                                <div className="nome">
-                                    CAV
-                                </div>
-                            </div>
-                            <div className="campus" onClick={() => (setSelectedCampusOption('CRP'), setDisplayCampusOptions(!displayCampusOptions))}>
-                                <div className="foto">
-                                    <img src={foto} alt="" />
-                                </div>
-                                <div className="nome">
-                                    CRP
-                                </div>
-                            </div> */}
                         </div>
                     </div>
                     
@@ -326,10 +360,14 @@ function App() {
                         }
                     </select>
 
-                    <select className="disciplinas">
-                        <option value="disciplina1">disciplina1</option>
-                        <option value="disciplina2">disciplina2</option>
-                        <option value="disciplina3">disciplina3</option>
+                    <select className="disciplinas" onChange={handleChangeDisciplinasSelect}>
+                        <option value="">Selecione uma Disciplina</option>
+                        {disciplinas.length > 0 ? 
+                            disciplinas.map(disciplina => 
+                                <option key={disciplina.CodDisc + `${disciplina.CodCurso}`} value={disciplina.CodDisc}>{disciplina.nome}</option>
+                            ) : 
+                            <option value="">Carregando...</option>
+                        }
                     </select>
 
                 </div>
@@ -376,7 +414,7 @@ function App() {
                     Info:
                     { selectedCampus != undefined ?
                         <div className="infoCampus">
-                            <a onClick={openCampusModal}>Informações do Campus</a>
+                            <a style={{cursor: 'pointer'}} onClick={openCampusModal}>Informações do Campus</a>
                         </div> : ''
                     }
                     { selectedDepto != undefined ?
