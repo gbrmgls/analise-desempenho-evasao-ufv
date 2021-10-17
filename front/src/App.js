@@ -5,6 +5,9 @@ import { Bar } from 'react-chartjs-2';
 
 function App() {
         const [campi, setCampi] = useState([]);
+        const [displayCampusOptions, setDisplayCampusOptions] = useState(false);
+        const [selectedCampus, setSelectedCampus] = useState('');
+
         const [departamentos, setDepartamentos] = useState([]);
         const [foto, setFoto] = useState('');
         const [grafico, setGrafico] = useState({
@@ -69,14 +72,62 @@ function App() {
         return (
             <div className="App">
                 <div className="selects">
-                    <select className="campi" onChange={handleChangeCampiSelect}>
+                    {/* <select className="campi" onChange={handleChangeCampiSelect}>
                         {campi.length > 0 ? 
                             campi.map(campus => 
                                 <option key={campus.SiglaCamp} value={campus.SiglaCamp}>{campus.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
                         }
-                    </select>
+                    </select> */}
+                    
+                    <div className="selectCampus">
+                        <div className="toggleOptions" onClick={() => setDisplayCampusOptions(!displayCampusOptions)}>
+                                <div className="foto">
+                                    {
+                                        selectedCampus !== ''?
+                                            <img src={foto} alt="" />
+                                        : <></>
+                                    }
+                                </div>
+                                <div className="nome">
+                                    {selectedCampus}
+                                </div>
+                        </div>  
+                        <div className="options" style={{'display' : displayCampusOptions? 'flex' : 'none'}}>
+                            <div className="campus" onClick={() => (setSelectedCampus(''), setDisplayCampusOptions(!displayCampusOptions))}>
+                                <div className="foto">
+                                </div>
+                                <div className="nome">
+                                    Limpar
+                                </div>
+                            </div>
+                            <div className="campus" onClick={() => (setSelectedCampus('CAF'), setDisplayCampusOptions(!displayCampusOptions))}>
+                                <div className="foto">
+                                    <img src={foto} alt="" />
+                                </div>
+                                <div className="nome">
+                                    CAF
+                                </div>
+                            </div>
+                            <div className="campus" onClick={() => (setSelectedCampus('CAV'), setDisplayCampusOptions(!displayCampusOptions))}>
+                                <div className="foto">
+                                    <img src={foto} alt="" />
+                                </div>
+                                <div className="nome">
+                                    CAV
+                                </div>
+                            </div>
+                            <div className="campus" onClick={() => (setSelectedCampus('CRP'), setDisplayCampusOptions(!displayCampusOptions))}>
+                                <div className="foto">
+                                    <img src={foto} alt="" />
+                                </div>
+                                <div className="nome">
+                                    CRP
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <select className="cursos">
                         <option value="curso1">curso1</option>
