@@ -3,22 +3,78 @@ import './App.css';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 
+const initialGraph = {
+    label: '',
+    labels: [],
+    data: [{
+        value: 0,
+        color: ''
+    }],
+    isLoaded: false
+};
+
+const campiToGraph = (campi) => {
+    return {
+        labels: campi.map(campus => campus.nome),
+        label: 'Porcentagem de aprovação por Campus',
+        data: campi.map(campus => {
+            const aprovados = campus['SUM(Turma.Aprovados)'];
+            const numEstudantes = campus['SUM(Turma.NumEstudantes)'];
+            return {
+                value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                color: 'rgba(75, 192, 192, 1)'
+            };
+        }),
+        isLoaded: true
+    }
+};
+
+const cursosCampusToGraph = (cursos, nomeCampus) => {
+    return {
+        labels: cursos.map(curso => curso.nome),
+        label: 'Porcentagem de aprovação por Cursos do ' + nomeCampus,
+        data: cursos.map(curso => {
+            const aprovados = curso['SUM(Turma.Aprovados)'];
+            const numEstudantes = curso['SUM(Turma.NumEstudantes)'];
+            return {
+                value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                color: 'rgba(75, 192, 192, 1)'
+            };
+        }),
+        isLoaded: true
+    }
+};
+
+const disciplinasCursoToGraph = (disciplinas, nomeCampus, nomeCurso) => {
+    return {
+        labels: disciplinas.map(disciplina => disciplina.nome),
+        label: 'Porcentagem de aprovação por Disciplina do Curso de ' + nomeCurso + ' do ' + nomeCampus,
+        data: disciplinas.map(disciplina => {
+            const aprovados = disciplina['SUM(Turma.Aprovados)'];
+            const numEstudantes = disciplina['SUM(Turma.NumEstudantes)'];
+            return {
+                value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                color: 'rgba(75, 192, 192, 1)'
+            };
+        }),
+        isLoaded: true
+    }
+};
+
 function App() {
         const [campi, setCampi] = useState([]);
         const [displayCampusOptions, setDisplayCampusOptions] = useState(false);
-        const [selectedCampus, setSelectedCampus] = useState('');
+        const [selectedCampusOption, setSelectedCampusOption] = useState('');
 
+        const [cursos, setCursos] = useState([]);
+        const [disciplinas, setDisciplinas] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
         const [foto, setFoto] = useState('');
-        const [grafico, setGrafico] = useState({
-            label: '',
-            labels: [],
-            data: [{
-                value: 0,
-                color: ''
-            }],
-            isLoaded: false
-        });
+        const [selectedCampus, setSelectedCampus] = useState(undefined);
+        const [selectedCurso, setSelectedCurso] = useState(undefined);
+        const [selectedDisciplina, setSelectedDisciplina] = useState(undefined);
+
+        const [grafico, setGrafico] = useState(initialGraph);
 
         const getCampi = async() => {
             try {
@@ -26,44 +82,71 @@ function App() {
                 const campi = res.data.map(campus => (
                     {
                         ...campus,
-                        Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data))),
-                        dados: Array.from({length: 6}, () => Math.floor(Math.random() * 10))
+                        Foto: btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))
                     }
                 )).sort((a,b) => a.nome.localeCompare(b.nome));
-
+                console.log(campi)
                 setCampi(campi);
 
-                setGrafico({
-                    labels: campi.map(campus => campus.nome),
-                    label: 'Porcentagem de aprovação por Campus',
-                    data: campi.map(campus => {
-                        const aprovados = campus['SUM(Turma.Aprovados)'];
-                        const numEstudantes = campus['SUM(Turma.NumEstudantes)'];
-                        return {
-                            value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
-                            color: 'rgba(75, 192, 192, 1)'
-                        };
-                    }),
-                    isLoaded: true
-                });
-
-                setFoto(`data:image/png;base64,${campi[0].Foto}`);
+                setGrafico(campiToGraph(campi));
             } catch {
                 return;
             }
         };
 
-        // const getDepartamentos = async() => {
-        //     const res = await axios.get(`/route_example/departamentos`);
-        //     const departamentos = res.data;
-        //     setDepartamentos(departamentos);
-        // };
+        const getCursosCampus = async(campusNome) => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/${campusNome}`);
+                const cursos = res.data.sort((a,b) => a.nome.localeCompare(b.nome));
+                setCursos(cursos);
 
-        const handleChangeCampiSelect = (e) => {
+                return cursos;
+            } catch {
+                return;
+            }
+        };
+
+        const getDisciplinasCurso = async(campusNome, cursoNome) => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/${campusNome}/${cursoNome}`);
+                const disciplinas = res.data.sort((a,b) => a.nome.localeCompare(b.nome));
+                setDisciplinas(disciplinas);
+
+                return disciplinas;
+            } catch {
+                return;
+            }
+        };
+
+        const handleChangeCampiSelect = async (e) => {
+            if(e.target.value === "") {
+                setSelectedCampus(undefined);
+                setGrafico(campiToGraph(campi));
+                return;
+            }
+
             const campusSelecionado = campi.find(campus => campus.SiglaCamp === e.target.value);
+            setSelectedCampus(campusSelecionado);
             setFoto(`data:image/png;base64,${campusSelecionado.Foto}`);
-            setGrafico(campusSelecionado.dados);
-        }
+
+            const cursosCampus = await getCursosCampus(campusSelecionado.SiglaCamp);
+            setGrafico(cursosCampusToGraph(cursosCampus, campusSelecionado.nome));
+        };
+
+        const handleChangeCursosSelect = async (e) => {
+            if(e.target.value === "") {
+                setSelectedCurso(undefined);
+                setGrafico(cursosCampusToGraph(cursos, selectedCampus.nome));
+                return;
+            }
+
+            const cursoSelecionado = cursos.find(curso => curso.CodCurso === Number(e.target.value));
+            setSelectedCurso(cursoSelecionado);
+            
+            const disciplinasCurso = await getDisciplinasCurso(selectedCampus.SiglaCamp, cursoSelecionado.CodCurso);
+            console.log(disciplinasCurso);
+            setGrafico(disciplinasCursoToGraph(disciplinasCurso, selectedCampus.nome, cursoSelecionado.nome));
+        };
 
         useEffect(() => {
             getCampi();
@@ -85,24 +168,24 @@ function App() {
                         <div className="toggleOptions" onClick={() => setDisplayCampusOptions(!displayCampusOptions)}>
                                 <div className="foto">
                                     {
-                                        selectedCampus !== ''?
+                                        selectedCampusOption !== ''?
                                             <img src={foto} alt="" />
                                         : <></>
                                     }
                                 </div>
                                 <div className="nome">
-                                    {selectedCampus}
+                                    {selectedCampusOption}
                                 </div>
                         </div>  
                         <div className="options" style={{'display' : displayCampusOptions? 'flex' : 'none'}}>
-                            <div className="campus" onClick={() => (setSelectedCampus(''), setDisplayCampusOptions(!displayCampusOptions))}>
+                            <div className="campus" onClick={() => (setSelectedCampusOption(''), setDisplayCampusOptions(!displayCampusOptions))}>
                                 <div className="foto">
                                 </div>
                                 <div className="nome">
                                     Limpar
                                 </div>
                             </div>
-                            <div className="campus" onClick={() => (setSelectedCampus('CAF'), setDisplayCampusOptions(!displayCampusOptions))}>
+                            <div className="campus" onClick={() => (setSelectedCampusOption('CAF'), setDisplayCampusOptions(!displayCampusOptions))}>
                                 <div className="foto">
                                     <img src={foto} alt="" />
                                 </div>
@@ -110,7 +193,7 @@ function App() {
                                     CAF
                                 </div>
                             </div>
-                            <div className="campus" onClick={() => (setSelectedCampus('CAV'), setDisplayCampusOptions(!displayCampusOptions))}>
+                            <div className="campus" onClick={() => (setSelectedCampusOption('CAV'), setDisplayCampusOptions(!displayCampusOptions))}>
                                 <div className="foto">
                                     <img src={foto} alt="" />
                                 </div>
@@ -118,7 +201,7 @@ function App() {
                                     CAV
                                 </div>
                             </div>
-                            <div className="campus" onClick={() => (setSelectedCampus('CRP'), setDisplayCampusOptions(!displayCampusOptions))}>
+                            <div className="campus" onClick={() => (setSelectedCampusOption('CRP'), setDisplayCampusOptions(!displayCampusOptions))}>
                                 <div className="foto">
                                     <img src={foto} alt="" />
                                 </div>
@@ -129,10 +212,14 @@ function App() {
                         </div>
                     </div>
 
-                    <select className="cursos">
-                        <option value="curso1">curso1</option>
-                        <option value="curso2">curso2</option>
-                        <option value="curso3">curso3</option>
+                    <select className="cursos" onChange={handleChangeCursosSelect}>
+                        <option value="">Selecione um Curso</option>
+                        {cursos.length > 0 ? 
+                            cursos.map(curso => 
+                                <option key={curso.CodCurso} value={curso.CodCurso}>{curso.nome}</option>
+                            ) : 
+                            <option value="">Carregando...</option>
+                        }
                     </select>
 
                     <select className="disciplinas">
@@ -143,10 +230,6 @@ function App() {
 
                 </div>
 
-                {/* <div className="grafico">
-                    GRAFICO
-                    {foto !== '' && <img src={foto} alt=""/>}
-                </div> */}
                 <div className="grafico1">
                     <Bar
                         data={{
