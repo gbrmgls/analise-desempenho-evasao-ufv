@@ -119,6 +119,7 @@ router.get("/bd_ufv/departamento/:depto/:ano", (req, res, next) => {
         })
 });
 
+// Consulta envolvendo funções de agregação
 router.get("/bd_ufv/disciplina/:curso/:disciplina/", (req, res, next) => {
     db.raw(`SELECT Turma.CodDisc, Turma.CodCurso, sum(Turma.Notas0a10), sum(Turma.Notas10a20), sum(Turma.Notas20a30), sum(Turma.Notas30a40), sum(Turma.Notas40a50), sum(Turma.Notas50a60), sum(Turma.Notas60a70), sum(Turma.Notas70a80), sum(Turma.Notas80a90), sum(Turma.Notas90a100)
             FROM Turma

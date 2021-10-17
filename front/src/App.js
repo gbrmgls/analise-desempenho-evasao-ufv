@@ -179,6 +179,7 @@ function App() {
         const handleChangeCampiSelect = async (e) => {
             setSelectedCurso(undefined);
             setSelectedDisciplina(undefined);
+            setSelectedDepto(undefined);
             setCursos([]);
             setDisciplinas([]);
             setTurmas([]);
@@ -294,7 +295,7 @@ function App() {
                                 contatos.filter(cont => cont.SiglaDepto == selectedDepto.SiglaDepto).map(cont => {
                                     if(cont.tel == null) return "Esse departamento não possui contatos."
                                     var strtel = cont.tel.toString()
-                                    return <li>{"(51) " + strtel.substring(0,4) + "-" + strtel.substring(4)}</li>
+                                    return <li>{"(31) " + strtel.substring(0,4) + "-" + strtel.substring(4)}</li>
                                 }) : "Esse departamento não possui contatos."
                             }
                         </ul>
@@ -347,6 +348,7 @@ function App() {
                         </div>
                     </div>
                     
+                    { selectedCampus?.SiglaCamp == "CAV" ?
                     <select className="departamentos" onChange={handleChangeDeptosSelect}>
                         <option value="">Selecione um Departamento</option>
                         {departamentos.length > 0 ? 
@@ -356,8 +358,9 @@ function App() {
                             )) : 
                             <option value="">Carregando...</option>
                         }
-                    </select>
-
+                    </select> : ''
+                    }
+                    
                     <select className="cursos" onChange={handleChangeCursosSelect}>
                         <option value="">Selecione um Curso</option>
                         {cursos.length > 0 ? 
