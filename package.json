@@ -26,6 +26,7 @@
     "knex": "^0.21.12",
     "mysql": "^2.18.1",
     "mysql2": "^2.2.5",
+    "react-modal": "^3.14.3",
     "sqlite3": "^5.0.2"
   },
   "devDependencies": {
