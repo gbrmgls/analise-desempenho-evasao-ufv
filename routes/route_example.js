@@ -120,6 +120,20 @@ router.get("/bd_ufv/departamento/:depto/:ano", (req, res, next) => {
         })
 });
 
+// Consulta envolvendo apenas seleção
+router.get("/bd_ufv/disciplina/turmas/:curso/:disciplina/", (req, res, next) => {
+    db.raw(`SELECT *
+            FROM Turma
+            WHERE Turma.CodDisc = '${req.params.disciplina}' AND
+            Turma.Codcurso = ${req.params.curso}`)
+        .then((data) => {
+            res.send(data[0]);
+        }).catch(err => {
+            console.log(err)
+            res.send(err);
+        })
+});
+
 // Consulta envolvendo funções de agregação
 router.get("/bd_ufv/disciplina/:curso/:disciplina/", (req, res, next) => {
     db.raw(`SELECT Turma.CodDisc, Turma.CodCurso, sum(Turma.Notas0a10), sum(Turma.Notas10a20), sum(Turma.Notas20a30), sum(Turma.Notas30a40), sum(Turma.Notas40a50), sum(Turma.Notas50a60), sum(Turma.Notas60a70), sum(Turma.Notas70a80), sum(Turma.Notas80a90), sum(Turma.Notas90a100)

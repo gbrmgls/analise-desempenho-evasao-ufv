@@ -63,11 +63,23 @@ const disciplinasCursoToGraph = (disciplinas, nomeCampus, nomeCurso) => {
 };
 
 const turmasDisciplinaToGraph = (disciplina, nomeDisciplina, nomeCampus, nomeCurso) => {
-    console.log("TESTE -->", Object.keys(disciplina).filter(key => key !== 'CodCurso' && key !== 'CodDisc'))
+    const keysToRemove = [
+        'Abandonos',
+        'Ano',
+        'Aprovados',
+        'CodCurso',
+        'CodDisc',
+        'MaiorNota',
+        'MenorNota',
+        'MédiaNota',
+        'NumEstudantes',
+        'Reprovados',
+        'Semestre'];
+
     return {
         labels: ['Notas 0-10', 'Notas 10-20', 'Notas 20-30', 'Notas 30-40', 'Notas 40-50', 'Notas 50-60', 'Notas 60-70', 'Notas 70-80', 'Notas 80-90', 'Notas 90-100'],
         label: 'Notas de ' + nomeDisciplina + ' do Curso de ' + nomeCurso + ' do ' + nomeCampus,
-        data: Object.keys(disciplina).filter(key => key !== 'CodCurso' && key !== 'CodDisc')
+        data: Object.keys(disciplina).filter(key => !keysToRemove.includes(key))
             .map(key => {
                 return {
                     value: disciplina[key],
@@ -86,9 +98,11 @@ function App() {
         const [cursos, setCursos] = useState([]);
         const [disciplinas, setDisciplinas] = useState([]);
         const [turmas, setTurmas] = useState([]);
+        const [notas, setNotas] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
         const [contatos, setContatos] = useState([]);
         const [foto, setFoto] = useState('');
+
         const [selectedCampus, setSelectedCampus] = useState(undefined);
         const [selectedDepto, setSelectedDepto] = useState(undefined);
         const [selectedCurso, setSelectedCurso] = useState(undefined);
@@ -108,8 +122,13 @@ function App() {
                         ...campus,
                         Foto: `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))}`
                     }
+<<<<<<< HEAD
                 ))//.sort((a,b) => a.nome.localeCompare(b.nome));
                 console.log(campi)
+=======
+                )).sort((a,b) => a.nome.localeCompare(b.nome));
+
+>>>>>>> 5a81979a3303f30d18adff508fa7a5321ddd13de
                 setCampi(campi);
 
                 setGrafico(campiToGraph(campi));
@@ -166,11 +185,18 @@ function App() {
 
         const getNotasDisciplina = async(curso, disciplina) => {
             try {
+<<<<<<< HEAD
                 const res = await axios.get(`/route_example/bd_ufv/disciplina/${curso}/${disciplina}/`);
                 const notas = res.data//.sort((a,b) => a.nome.localeCompare(b.nome))[0];
                 setTurmas(notas);
+=======
+                const resNotas = await axios.get(`/route_example/bd_ufv/disciplina/${curso}/${disciplina}/`);
+                const notas = resNotas.data.sort((a,b) => a.nome.localeCompare(b.nome))[0];
+>>>>>>> 5a81979a3303f30d18adff508fa7a5321ddd13de
 
-                return notas;
+                const resTurmas = await axios.get(`/route_example/bd_ufv/disciplina/turmas/${curso}/${disciplina}/`);
+                const turmas = resTurmas.data;
+                return {notas, turmas};
             } catch {
                 return;
             }
@@ -183,6 +209,7 @@ function App() {
             setCursos([]);
             setDisciplinas([]);
             setTurmas([]);
+            setNotas([]);
 
             if(e === "") {
                 setSelectedCampus(undefined);
@@ -202,6 +229,7 @@ function App() {
         const handleChangeCursosSelect = async (e) => {
             setDisciplinas([]);
             setTurmas([]);
+            setNotas([]);
             setSelectedDisciplina(undefined);
             if(e.target.value === "") {
                 setSelectedCurso(undefined);
@@ -214,12 +242,13 @@ function App() {
             setSelectedCurso(cursoSelecionado);
             
             const disciplinasCurso = await getDisciplinasCurso(selectedCampus.SiglaCamp, cursoSelecionado.CodCurso);
-            console.log(disciplinasCurso);
+
             setGrafico(disciplinasCursoToGraph(disciplinasCurso, selectedCampus.nome, cursoSelecionado.nome));
         };
 
         const handleChangeDisciplinasSelect = async (e) => {
             setTurmas([]);
+            setNotas([]);
             if(e.target.value === "") {
                 setSelectedDisciplina(undefined);
 
@@ -231,8 +260,28 @@ function App() {
             setSelectedDisciplina(disciplinaSelecionada);
             
             const disciplinaNotas = await getNotasDisciplina(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
+<<<<<<< HEAD
             console.log(disciplinaNotas);
             setGrafico(turmasDisciplinaToGraph(disciplinaNotas, disciplinaSelecionada.nome, selectedCampus.nome, selectedCurso.nome));
+=======
+
+            setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome + ' (Todos semestres)', selectedCurso.nome));
+            setTurmas(disciplinaNotas.turmas);
+            setNotas(disciplinaNotas.notas);
+        };
+
+        const handleChangeTurmasSelect = async (e) => {
+            if(e.target.value === "") {
+                setSelectedTurma(undefined);
+
+                setGrafico(turmasDisciplinaToGraph(notas, selectedDisciplina.nome, selectedCampus.nome + ' (Todos semestres)', selectedCurso.nome));
+                return;
+            }
+            const semestre = e.target.value.split('+');
+            const turmaSelecionada = turmas.find(turma => turma.Ano === Number(semestre[0]) && turma.Semestre === Number(semestre[1]));
+
+            setGrafico(turmasDisciplinaToGraph(turmaSelecionada, selectedDisciplina.nome, selectedCampus.nome, selectedCurso.nome));
+>>>>>>> 5a81979a3303f30d18adff508fa7a5321ddd13de
         };
 
         const handleChangeDeptosSelect = async (e) => {
@@ -374,12 +423,27 @@ function App() {
                     <select className="disciplinas" onChange={handleChangeDisciplinasSelect}>
                         <option value="">Selecione uma Disciplina</option>
                         {disciplinas.length > 0 ? 
+<<<<<<< HEAD
                             disciplinas.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map(disciplina => 
                                 <option key={disciplina.CodDisc + disciplina.CodCurso} value={disciplina.CodDisc}>{disciplina.nome}</option>
+=======
+                            disciplinas.map((disciplina, index) => 
+                                <option key={disciplina.CodDisc + `${index}`} value={disciplina.CodDisc}>{disciplina.nome}</option>
+>>>>>>> 5a81979a3303f30d18adff508fa7a5321ddd13de
                             ) : 
                             <option value="">Carregando...</option>
                         }
                     </select>
+
+                    {turmas.length > 0 && 
+                        <select className="turmas" onChange={handleChangeTurmasSelect}>
+                            <option value="">Selecione um semestre</option>
+                            {turmas.map((turma, index) => 
+                                <option key={index} value={turma.Ano+'+'+turma.Semestre}>{`${turma.Ano}/${turma.Semestre}`}</option>
+                            )}
+
+                        </select>
+                    }
 
                 </div>
 
