@@ -63,11 +63,23 @@ const disciplinasCursoToGraph = (disciplinas, nomeCampus, nomeCurso) => {
 };
 
 const turmasDisciplinaToGraph = (disciplina, nomeDisciplina, nomeCampus, nomeCurso) => {
-    console.log("TESTE -->", Object.keys(disciplina).filter(key => key !== 'CodCurso' && key !== 'CodDisc'))
+    const keysToRemove = [
+        'Abandonos',
+        'Ano',
+        'Aprovados',
+        'CodCurso',
+        'CodDisc',
+        'MaiorNota',
+        'MenorNota',
+        'MédiaNota',
+        'NumEstudantes',
+        'Reprovados',
+        'Semestre'];
+
     return {
         labels: ['Notas0a10', 'Notas10a20', 'Notas20a30', 'Notas30a40', 'Notas40a50', 'Notas50a60', 'Notas60a70', 'Notas70a80', 'Notas80a90', 'Notas90a100'],
         label: 'Notas de ' + nomeDisciplina + ' do Curso de ' + nomeCurso + ' do ' + nomeCampus,
-        data: Object.keys(disciplina).filter(key => key !== 'CodCurso' && key !== 'CodDisc')
+        data: Object.keys(disciplina).filter(key => !keysToRemove.includes(key))
             .map(key => {
                 return {
                     value: disciplina[key],
@@ -86,6 +98,7 @@ function App() {
         const [cursos, setCursos] = useState([]);
         const [disciplinas, setDisciplinas] = useState([]);
         const [turmas, setTurmas] = useState([]);
+        const [notas, setNotas] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
         const [contatos, setContatos] = useState([]);
         const [foto, setFoto] = useState('');
@@ -184,6 +197,7 @@ function App() {
             setCursos([]);
             setDisciplinas([]);
             setTurmas([]);
+            setNotas([]);
 
             if(e === "") {
                 setSelectedCampus(undefined);
@@ -203,6 +217,7 @@ function App() {
         const handleChangeCursosSelect = async (e) => {
             setDisciplinas([]);
             setTurmas([]);
+            setNotas([]);
             setSelectedDisciplina(undefined);
             if(e.target.value === "") {
                 setSelectedCurso(undefined);
@@ -215,12 +230,13 @@ function App() {
             setSelectedCurso(cursoSelecionado);
             
             const disciplinasCurso = await getDisciplinasCurso(selectedCampus.SiglaCamp, cursoSelecionado.CodCurso);
-            console.log(disciplinasCurso);
+
             setGrafico(disciplinasCursoToGraph(disciplinasCurso, selectedCampus.nome, cursoSelecionado.nome));
         };
 
         const handleChangeDisciplinasSelect = async (e) => {
             setTurmas([]);
+            setNotas([]);
             if(e.target.value === "") {
                 setSelectedDisciplina(undefined);
 
@@ -232,9 +248,23 @@ function App() {
             setSelectedDisciplina(disciplinaSelecionada);
             
             const disciplinaNotas = await getNotasDisciplina(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
-            console.log(disciplinaNotas);
-            setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome, disciplinaSelecionada.nome));
-            setTurmas(disciplinaNotas.turmas)
+
+            setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome + ' (Todos semestres)', selectedCurso.nome));
+            setTurmas(disciplinaNotas.turmas);
+            setNotas(disciplinaNotas.notas);
+        };
+
+        const handleChangeTurmasSelect = async (e) => {
+            if(e.target.value === "") {
+                setSelectedTurma(undefined);
+
+                setGrafico(turmasDisciplinaToGraph(notas, selectedDisciplina.nome, selectedCampus.nome + ' (Todos semestres)', selectedCurso.nome));
+                return;
+            }
+            const semestre = e.target.value.split('+');
+            const turmaSelecionada = turmas.find(turma => turma.Ano === Number(semestre[0]) && turma.Semestre === Number(semestre[1]));
+
+            setGrafico(turmasDisciplinaToGraph(turmaSelecionada, selectedDisciplina.nome, selectedCampus.nome, selectedCurso.nome));
         };
 
         const handleChangeDeptosSelect = async (e) => {
@@ -381,10 +411,10 @@ function App() {
                     </select>
 
                     {turmas.length > 0 && 
-                        <select className="turmas" onChange={() => {}}>
+                        <select className="turmas" onChange={handleChangeTurmasSelect}>
                             <option value="">Selecione um semestre</option>
                             {turmas.map((turma, index) => 
-                                <option key={index} value={{Ano: turma.Ano, Semestre: turma.Semestre}}>{`${turma.Ano}/${turma.Semestre}`}</option>
+                                <option key={index} value={turma.Ano+'+'+turma.Semestre}>{`${turma.Ano}/${turma.Semestre}`}</option>
                             )}
 
                         </select>
