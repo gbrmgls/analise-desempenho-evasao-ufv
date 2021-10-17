@@ -65,6 +65,24 @@ router.get("/bd_ufv/departamento/contatos", (req, res, next) => {
         })
 });
 
+// Consulta envolvendo a junção de três ou mais relações
+router.get("/bd_ufv/departamento/aprovacao", (req, res, next) => {
+    db.raw(`SELECT Departamento.Nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
+            FROM Departamento
+            JOIN Disciplina
+            ON Departamento.SiglaDepto = Disciplina.SiglaDepto
+            JOIN Turma
+            ON Turma.CodDisc = Disciplina.CodDisc
+            GROUP BY Departamento.SiglaDepto
+            ORDER BY sum(Turma.Aprovados)/sum(Turma.NumEstudantes)`)
+        .then((data) => {
+            res.send(data[0]);
+        }).catch(err => {
+            console.log(err)
+            res.send(err);
+        })
+});
+
 // Consulta envolvendo funções de agregação
 router.get("/bd_ufv/departamento/:depto", (req, res, next) => {
     db.raw(`SELECT Disciplina.CodDisc, Disciplina.Nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
@@ -82,14 +100,13 @@ router.get("/bd_ufv/departamento/:depto", (req, res, next) => {
         })
 });
 
+// Consulta envolvendo funções de agregação
 router.get("/bd_ufv/departamento/:depto/:ano", (req, res, next) => {
     db.raw(`SELECT Disciplina.CodDisc, Disciplina.Nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
-            FROM Departamento
-            JOIN Disciplina
-            ON Departamento.SiglaDepto = Disciplina.SiglaDepto
+            FROM Disciplina
             JOIN Turma
             ON Turma.CodDisc = Disciplina.CodDisc
-            WHERE Departamento.SiglaDepto = '${req.params.depto}'
+            WHERE Disciplina.SiglaDepto = '${req.params.depto}'
             AND Turma.Ano = ${req.params.ano}
             AND Turma.Ano = Disciplina.Ano
             GROUP BY Disciplina.CodDisc, Disciplina.Nome

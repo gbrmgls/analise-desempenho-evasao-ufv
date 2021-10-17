@@ -350,9 +350,10 @@ function App() {
                     <select className="departamentos" onChange={handleChangeDeptosSelect}>
                         <option value="">Selecione um Departamento</option>
                         {departamentos.length > 0 ? 
+                            [<option value="Todos">Todos</option>].concat(
                             departamentos.map(depto => 
                                 <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.Nome}</option>
-                            ) : 
+                            )) : 
                             <option value="">Carregando...</option>
                         }
                     </select>
