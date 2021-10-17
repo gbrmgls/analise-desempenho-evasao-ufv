@@ -227,7 +227,7 @@ function App() {
                     <div className="modalContent">
                         <h2>Contatos: </h2>
                         <ul>
-                            {contatos.length > 0 ?
+                            {contatos.length > 0 && selectedDepto !== undefined ?
                                 contatos.find(cont => cont.SiglaDepto == selectedDepto.SilgaDepto).map(cont => 
                                     <li>{cont.tel}</li>
                                 ) : "Esse departamento não possui contatos."
