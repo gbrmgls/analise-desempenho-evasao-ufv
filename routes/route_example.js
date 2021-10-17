@@ -68,7 +68,7 @@ router.get("/bd_ufv/departamento/contatos", (req, res, next) => {
 
 // Consulta envolvendo a junção de três ou mais relações
 router.get("/bd_ufv/departamento/aprovacao", (req, res, next) => {
-    db.raw(`SELECT Departamento.Nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
+    db.raw(`SELECT Departamento.nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
             FROM Departamento
             JOIN Disciplina
             ON Departamento.SiglaDepto = Disciplina.SiglaDepto

@@ -30,6 +30,22 @@ const campiToGraph = (campi) => {
     }
 };
 
+const departamentosToGraph = (departamentos) => {
+    return {
+        labels: departamentos.map(dep => dep.nome),
+        label: 'Porcentagem de aprovação por Departamento',
+        data: departamentos.map(dep => {
+            const aprovados = dep['sum(Turma.Aprovados)'];
+            const numEstudantes = dep['sum(Turma.NumEstudantes)'];
+            return {
+                value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                color: 'rgba(75, 192, 192, 1)'
+            };
+        }),
+        isLoaded: true
+    }
+};
+
 const cursosCampusToGraph = (cursos, nomeCampus) => {
     return {
         labels: cursos.map(curso => curso.nome),
@@ -154,6 +170,17 @@ function App() {
             }
         };
 
+        const getDepartamentosAprov = async() => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/departamento/aprovacao`);
+                const departamentos = res.data;
+
+                return departamentos;
+            } catch {
+                return;
+            }
+        }
+
         const getCursosCampus = async(campusNome) => {
             try {
                 const res = await axios.get(`/route_example/bd_ufv/${campusNome}`);
@@ -276,13 +303,18 @@ function App() {
                 return;
             }
 
-            
-            console.log(e.target.value);
-            const deptoSelecionado = departamentos.find(depto => depto.SiglaDepto == e.target.value);
-            console.log(deptoSelecionado);
-            setSelectedDepto(deptoSelecionado);
+            let departamentos;
+            if(e.target.value.localeCompare('Todos') === 0) {
+               departamentos = await getDepartamentosAprov();
+               setGrafico(departamentosToGraph(departamentos));
+            } else {
+                console.log(e.target.value);
+                const deptoSelecionado = departamentos.find(depto => depto.SiglaDepto == e.target.value);
+                console.log(deptoSelecionado);
+                setSelectedDepto(deptoSelecionado);
+                console.log(selectedDepto);
+            }
 
-            console.log(selectedDepto);
         }
 
         const openCampusModal = () => setModalCampusOpen(true);
