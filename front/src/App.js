@@ -63,6 +63,9 @@ const disciplinasCursoToGraph = (disciplinas, nomeCampus, nomeCurso) => {
 
 function App() {
         const [campi, setCampi] = useState([]);
+        const [displayCampusOptions, setDisplayCampusOptions] = useState(false);
+        const [selectedCampusOption, setSelectedCampusOption] = useState('');
+
         const [cursos, setCursos] = useState([]);
         const [disciplinas, setDisciplinas] = useState([]);
         const [departamentos, setDepartamentos] = useState([]);
@@ -152,15 +155,62 @@ function App() {
         return (
             <div className="App">
                 <div className="selects">
-                    <select className="campi" onChange={handleChangeCampiSelect}>
-                        <option value="">Selecione um Campus</option>
+                    {/* <select className="campi" onChange={handleChangeCampiSelect}>
                         {campi.length > 0 ? 
                             campi.map(campus => 
                                 <option key={campus.SiglaCamp} value={campus.SiglaCamp}>{campus.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
                         }
-                    </select>
+                    </select> */}
+                    
+                    <div className="selectCampus">
+                        <div className="toggleOptions" onClick={() => setDisplayCampusOptions(!displayCampusOptions)}>
+                                <div className="foto">
+                                    {
+                                        selectedCampusOption !== ''?
+                                            <img src={foto} alt="" />
+                                        : <></>
+                                    }
+                                </div>
+                                <div className="nome">
+                                    {selectedCampusOption}
+                                </div>
+                        </div>  
+                        <div className="options" style={{'display' : displayCampusOptions? 'flex' : 'none'}}>
+                            <div className="campus" onClick={() => (setSelectedCampusOption(''), setDisplayCampusOptions(!displayCampusOptions))}>
+                                <div className="foto">
+                                </div>
+                                <div className="nome">
+                                    Limpar
+                                </div>
+                            </div>
+                            <div className="campus" onClick={() => (setSelectedCampusOption('CAF'), setDisplayCampusOptions(!displayCampusOptions))}>
+                                <div className="foto">
+                                    <img src={foto} alt="" />
+                                </div>
+                                <div className="nome">
+                                    CAF
+                                </div>
+                            </div>
+                            <div className="campus" onClick={() => (setSelectedCampusOption('CAV'), setDisplayCampusOptions(!displayCampusOptions))}>
+                                <div className="foto">
+                                    <img src={foto} alt="" />
+                                </div>
+                                <div className="nome">
+                                    CAV
+                                </div>
+                            </div>
+                            <div className="campus" onClick={() => (setSelectedCampusOption('CRP'), setDisplayCampusOptions(!displayCampusOptions))}>
+                                <div className="foto">
+                                    <img src={foto} alt="" />
+                                </div>
+                                <div className="nome">
+                                    CRP
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <select className="cursos" onChange={handleChangeCursosSelect}>
                         <option value="">Selecione um Curso</option>
