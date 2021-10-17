@@ -73,12 +73,14 @@ function App() {
         const [contatos, setContatos] = useState([]);
         const [foto, setFoto] = useState('');
         const [selectedCampus, setSelectedCampus] = useState(undefined);
+        const [selectedDepto, setSelectedDepto] = useState(undefined);
         const [selectedCurso, setSelectedCurso] = useState(undefined);
         const [selectedDisciplina, setSelectedDisciplina] = useState(undefined);
 
         const [grafico, setGrafico] = useState(initialGraph);
 
         const [modalCampusOpen, setModalCampusOpen] = useState(false);
+        const [modalDeptoOpen, setModalDeptoOpen] = useState(false);
 
         const getCampi = async() => {
             try {
@@ -175,12 +177,20 @@ function App() {
         };
 
         const handleChangeDeptosSelect = async (e) => {
+            if(e.target.value === "") {
+                setSelectedDepto(undefined);
+                return;
+            }
 
+            const cursoSelecionado = cursos.find(curso => curso.CodCurso === Number(e.target.value));
+            setSelectedCurso(cursoSelecionado);
         }
 
         const openCampusModal = () => setModalCampusOpen(true);
-
         const closeCampusModal = () => setModalCampusOpen(false);
+
+        const openDeptoModal = () => setModalDeptoOpen(true);
+        const closeDeptoModal = () => setModalDeptoOpen(false);
 
         useEffect(() => {
             getCampi();
@@ -205,6 +215,24 @@ function App() {
                                     }
                                 </div>
                         <h2>Endereço: {selectedCampus == undefined ? "" : selectedCampus.End}</h2>
+                    </div>
+                </Modal>
+
+                <Modal
+                    isOpen={modalDeptoOpen}
+                    contentLabel={selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.Nome}
+                >
+                    <h1>{selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.Nome}</h1>
+                    <button onClick={closeDeptoModal}>Fechar</button>
+                    <div className="modalContent">
+                        <h2>Contatos: </h2>
+                        <ul>
+                            {contatos.length > 0 ?
+                                contatos.find(cont => cont.SiglaDepto == selectedDepto.SilgaDepto).map(cont => 
+                                    <li>{cont.tel}</li>
+                                ) : "Esse departamento não possui contatos."
+                            }
+                        </ul>
                     </div>
                 </Modal>
                 <div className="selects">
@@ -349,6 +377,11 @@ function App() {
                     { selectedCampus != undefined ?
                         <div className="infoCampus">
                             <a onClick={openCampusModal}>Informações do Campus</a>
+                        </div> : ''
+                    }
+                    { selectedDepto != undefined ?
+                        <div className="infoDepto">
+                            <a onClick={openDeptoModal}>Informações do Departamento</a>
                         </div> : ''
                     }
                 </div>

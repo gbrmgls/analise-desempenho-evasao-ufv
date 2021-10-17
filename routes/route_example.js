@@ -42,7 +42,7 @@ router.get("/bd_ufv/curso/:curso", (req, res, next) => {
 
 // Consulta envolvendo apenas as operações de seleção e projeção
 router.get("/bd_ufv/departamento/", (req, res, next) => {
-    db.raw(`SELECT Departamento.CodDepto, Departamento.Nome 
+    db.raw(`SELECT Departamento.SiglaDepto, Departamento.Nome 
             FROM Departamento`)
         .then((data) => {
             res.send(data);
