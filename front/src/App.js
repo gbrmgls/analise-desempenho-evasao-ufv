@@ -89,6 +89,7 @@ function App() {
         const [departamentos, setDepartamentos] = useState([]);
         const [contatos, setContatos] = useState([]);
         const [foto, setFoto] = useState('');
+
         const [selectedCampus, setSelectedCampus] = useState(undefined);
         const [selectedDepto, setSelectedDepto] = useState(undefined);
         const [selectedCurso, setSelectedCurso] = useState(undefined);
@@ -109,7 +110,7 @@ function App() {
                         Foto: `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))}`
                     }
                 )).sort((a,b) => a.nome.localeCompare(b.nome));
-                console.log(campi)
+
                 setCampi(campi);
 
                 setGrafico(campiToGraph(campi));
@@ -166,11 +167,12 @@ function App() {
 
         const getNotasDisciplina = async(curso, disciplina) => {
             try {
-                const res = await axios.get(`/route_example/bd_ufv/disciplina/${curso}/${disciplina}/`);
-                const notas = res.data.sort((a,b) => a.nome.localeCompare(b.nome))[0];
-                setTurmas(notas);
+                const resNotas = await axios.get(`/route_example/bd_ufv/disciplina/${curso}/${disciplina}/`);
+                const notas = resNotas.data.sort((a,b) => a.nome.localeCompare(b.nome))[0];
 
-                return notas;
+                const resTurmas = await axios.get(`/route_example/bd_ufv/disciplina/turmas/${curso}/${disciplina}/`);
+                const turmas = resTurmas.data;
+                return {notas, turmas};
             } catch {
                 return;
             }
@@ -231,7 +233,8 @@ function App() {
             
             const disciplinaNotas = await getNotasDisciplina(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
             console.log(disciplinaNotas);
-            setGrafico(turmasDisciplinaToGraph(disciplinaNotas, disciplinaSelecionada.nome, selectedCampus.nome, disciplinaSelecionada.nome));
+            setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome, disciplinaSelecionada.nome));
+            setTurmas(disciplinaNotas.turmas)
         };
 
         const handleChangeDeptosSelect = async (e) => {
@@ -363,12 +366,22 @@ function App() {
                     <select className="disciplinas" onChange={handleChangeDisciplinasSelect}>
                         <option value="">Selecione uma Disciplina</option>
                         {disciplinas.length > 0 ? 
-                            disciplinas.map(disciplina => 
-                                <option key={disciplina.CodDisc + `${disciplina.CodCurso}`} value={disciplina.CodDisc}>{disciplina.nome}</option>
+                            disciplinas.map((disciplina, index) => 
+                                <option key={disciplina.CodDisc + `${index}`} value={disciplina.CodDisc}>{disciplina.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
                         }
                     </select>
+
+                    {turmas.length > 0 && 
+                        <select className="turmas" onChange={() => {}}>
+                            <option value="">Selecione um semestre</option>
+                            {turmas.map((turma, index) => 
+                                <option key={index} value={{Ano: turma.Ano, Semestre: turma.Semestre}}>{`${turma.Ano}/${turma.Semestre}`}</option>
+                            )}
+
+                        </select>
+                    }
 
                 </div>
 
