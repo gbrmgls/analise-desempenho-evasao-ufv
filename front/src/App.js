@@ -171,7 +171,7 @@ function App() {
                         ...campus,
                         Foto: `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(campus.Foto.data)))}`
                     }
-                )).sort((a,b) => a.nome.localeCompare(b.nome));
+                ));
 
                 setCampi(campi);
 
@@ -536,7 +536,7 @@ function App() {
                         <option value="">Selecione um Departamento</option>
                         {departamentos.length > 0 ? 
                             [<option value="Todos">Todos</option>].concat(
-                            departamentos.sort((a,b) => a.nome.localeCompare(b.nome)).map(depto => 
+                            departamentos.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map(depto => 
                                 <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.nome}</option>
                             )) : 
                             <option value="">Carregando...</option>
@@ -547,7 +547,7 @@ function App() {
                     {!selectedDepto && <select className="cursos" onChange={handleChangeCursosSelect}>
                         <option value="">Selecione um Curso</option>
                         {cursos.length > 0 ? 
-                            cursos.sort((a,b) => a.nome.localeCompare(b.nome)).map(curso => 
+                            cursos.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map(curso => 
                                 <option key={curso.CodCurso} value={curso.CodCurso}>{curso.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
@@ -613,8 +613,8 @@ function App() {
                         }}
                     />
                     {minTurma && 
-                        <p style={{textAlign: 'left'}}>
-                            A turma de {minTurma.Ano}/{minTurma.Semestre} possui a menor taxa de aprovação na disciplina {selectedDisciplina.nome}
+                        <p style={{textAlign: 'left', margin: '0 0 0 0'}}>
+                            A turma de {minTurma.Ano}/{minTurma.Semestre} possui a menor taxa de aprovação na disciplina {selectedDisciplina.nome} com {minTurma.TaxAprov * 100}% de aprovação
                         </p>
                     }
                 </div>

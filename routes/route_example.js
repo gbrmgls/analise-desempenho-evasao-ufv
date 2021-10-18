@@ -41,35 +41,6 @@ router.get("/bd_ufv/curso/:curso", (req, res, next) => {
         })
 });
 
-// Consulta envolvendo a junção de apenas duas relações
-router.get("/bd_ufv/curso/:curso/min", (req, res, next) => {
-    db.raw(`SELECT sq.CodDisc, sq.Nome, sq.TaxaAprov
-            FROM (
-                SELECT Disciplina.CodDisc AS CodDisc, Disciplina.Nome AS Nome, sum(Turma.Aprovados)/sum(Turma.NumEstudantes) AS TaxaAprov
-                FROM Disciplina
-                JOIN Turma
-                ON Turma.CodDisc = Disciplina.CodDisc
-                WHERE Turma.CodCurso = '${req.params.curso}'
-                AND Turma.NumEstudantes <> 0
-                GROUP BY Disciplina.CodDisc, Disciplina.Nome
-            ) AS sq
-            WHERE TaxaAprov = (SELECT min(sq.TaxaAprov) FROM (
-                SELECT Disciplina.CodDisc AS CodDisc, Disciplina.Nome AS Nome, sum(Turma.Aprovados)/sum(Turma.NumEstudantes) AS TaxaAprov
-                FROM Disciplina
-                JOIN Turma
-                ON Turma.CodDisc = Disciplina.CodDisc
-                WHERE Turma.CodCurso = '${req.params.curso}'
-                AND Turma.NumEstudantes <> 0
-                GROUP BY Disciplina.CodDisc, Disciplina.Nome
-            ) AS sq)`)
-        .then((data) => {
-            res.send(data[0]);
-        }).catch(err => {
-            console.log(err)
-            res.send(err);
-        })
-});
-
 // Consulta envolvendo apenas as operações de seleção e projeção
 router.get("/bd_ufv/departamento/", (req, res, next) => {
     db.raw(`SELECT Departamento.SiglaDepto, Departamento.nome 
@@ -130,28 +101,9 @@ router.get("/bd_ufv/departamento/:depto", (req, res, next) => {
         })
 });
 
-// Consulta envolvendo funções de agregação
-router.get("/bd_ufv/departamento/:depto/:ano", (req, res, next) => {
-    db.raw(`SELECT Disciplina.CodDisc, Disciplina.Nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
-            FROM Disciplina
-            JOIN Turma
-            ON Turma.CodDisc = Disciplina.CodDisc
-            WHERE Disciplina.SiglaDepto = '${req.params.depto}'
-            AND Turma.Ano = ${req.params.ano}
-            AND Turma.Ano = Disciplina.Ano
-            GROUP BY Disciplina.CodDisc, Disciplina.Nome
-            ORDER BY sum(Turma.Aprovados)/sum(Turma.NumEstudantes)`)
-        .then((data) => {
-            res.send(data[0]);
-        }).catch(err => {
-            console.log(err)
-            res.send(err);
-        })
-});
-
 // Consulta envolvendo subconsultas aninhadas
 router.get("/bd_ufv/disciplina/:curso/:disciplina/min", (req, res, next) => {
-    db.raw(`SELECT Turma.Ano, Turma.Semestre, Turma.Aprovados/Turma.NumEstudantes
+    db.raw(`SELECT Turma.Ano, Turma.Semestre, Turma.Aprovados/Turma.NumEstudantes AS TaxAprov
             FROM Turma
             WHERE Turma.CodDisc = '${req.params.disciplina}'
             AND Turma.CodCurso = ${req.params.curso}
@@ -184,7 +136,7 @@ router.get("/bd_ufv/disciplina/turmas/:curso/:disciplina/", (req, res, next) => 
             res.send(err);
         })
 });
-
+// Consulta envolvendo funções de agregação
 router.get("/bd_ufv/disciplina/:disciplina/", (req, res, next) => {
     db.raw(`SELECT Turma.CodDisc, sum(Turma.Notas0a10), sum(Turma.Notas10a20), sum(Turma.Notas20a30), sum(Turma.Notas30a40), sum(Turma.Notas40a50), sum(Turma.Notas50a60), sum(Turma.Notas60a70), sum(Turma.Notas70a80), sum(Turma.Notas80a90), sum(Turma.Notas90a100)
             FROM Turma
@@ -213,20 +165,6 @@ router.get("/bd_ufv/disciplina/:curso/:disciplina/", (req, res, next) => {
         })
 });
 
-router.get("/bd_ufv/disciplina/:curso/:disciplina/:ano/:semestre", (req, res, next) => {
-    db.raw(`SELECT * 
-            FROM Turma
-            WHERE Turma.CodDisc = '${req.params.disciplina}' AND
-            Turma.Codcurso = ${req.params.disciplina} AND
-            Turma.Ano = ${req.params.ano} AND Turma.Semestre = ${req.params.semestre}`)
-        .then((data) => {
-            res.send(data[0]);
-        }).catch(err => {
-            console.log(err)
-            res.send(err);
-        })
-});
-
 // Consulta envolvendo uma das operações sobre conjuntos (Diferença / NOT IN)
 router.get("/bd_ufv/sem_turma", (req, res, next) => {
     db.raw(`SELECT CodDisc, Ano, nome 
@@ -242,7 +180,7 @@ router.get("/bd_ufv/sem_turma", (req, res, next) => {
             res.send(err);
         })
 });
-
+// Consulta envolvendo funções de agregação
 router.get("/bd_ufv/:campus", (req, res, next) => {
     db.raw(`SELECT Curso.CodCurso, Curso.nome, SUM(Turma.NumEstudantes) , SUM(Turma.Aprovados) 
             FROM Campus 
