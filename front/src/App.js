@@ -62,13 +62,29 @@ const cursosCampusToGraph = (cursos, nomeCampus) => {
     }
 };
 
+const disciplinasDeptoToGraph = (disciplinas, nomeDepto) => {
+    return {
+        labels: disciplinas.map(disciplina => disciplina.nome),
+        label: 'Porcentagem de aprovação por Disciplina do ' + nomeDepto,
+        data: disciplinas.map(disciplina => {
+            const aprovados = disciplina['sum(Turma.Aprovados)'];
+            const numEstudantes = disciplina['sum(Turma.NumEstudantes)'];
+            return {
+                value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
+                color: 'rgba(75, 192, 192, 1)'
+            };
+        }),
+        isLoaded: true
+    }
+};
+
 const disciplinasCursoToGraph = (disciplinas, nomeCampus, nomeCurso) => {
     return {
         labels: disciplinas.map(disciplina => disciplina.nome),
         label: 'Porcentagem de aprovação por Disciplina do Curso de ' + nomeCurso + ' do ' + nomeCampus,
         data: disciplinas.map(disciplina => {
-            const aprovados = disciplina['SUM(Turma.Aprovados)'];
-            const numEstudantes = disciplina['SUM(Turma.NumEstudantes)'];
+            const aprovados = disciplina['sum(Turma.Aprovados)'];
+            const numEstudantes = disciplina['sum(Turma.NumEstudantes)'];
             return {
                 value: !aprovados || !numEstudantes ? 0 : aprovados / numEstudantes * 100,
                 color: 'rgba(75, 192, 192, 1)'
@@ -94,7 +110,7 @@ const turmasDisciplinaToGraph = (disciplina, nomeDisciplina, nomeCampus, nomeCur
 
     return {
         labels: ['Notas 0-10', 'Notas 10-20', 'Notas 20-30', 'Notas 30-40', 'Notas 40-50', 'Notas 50-60', 'Notas 60-70', 'Notas 70-80', 'Notas 80-90', 'Notas 90-100'],
-        label: 'Notas de ' + nomeDisciplina + ' do Curso de ' + nomeCurso + ' do ' + nomeCampus,
+        label: 'Notas de ' + nomeDisciplina + (nomeCurso ? ' do Curso de ' : '') + (nomeCurso || '') + ' do ' + nomeCampus,
         data: Object.keys(disciplina).filter(key => !keysToRemove.includes(key))
             .map(key => {
                 return {
@@ -129,6 +145,8 @@ function App() {
 
         const [modalCampusOpen, setModalCampusOpen] = useState(false);
         const [modalDeptoOpen, setModalDeptoOpen] = useState(false);
+
+        const [disciplinaCursoDepto, setDisciplinaCursoDepto] = useState('');
 
         const getCampi = async() => {
             try {
@@ -181,6 +199,18 @@ function App() {
             }
         }
 
+        const getDepartamento = async(deptoNome) => {
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/departamento/${deptoNome}`);
+                const resDepto = res.data;
+
+                setDisciplinas(resDepto);
+                return resDepto;
+            } catch {
+                return;
+            }
+        };
+
         const getCursosCampus = async(campusNome) => {
             try {
                 const res = await axios.get(`/route_example/bd_ufv/${campusNome}`);
@@ -195,7 +225,7 @@ function App() {
 
         const getDisciplinasCurso = async(campusNome, cursoNome) => {
             try {
-                const res = await axios.get(`/route_example/bd_ufv/${campusNome}/${cursoNome}`);
+                const res = await axios.get(`/route_example/bd_ufv/curso/${cursoNome}`);
                 const disciplinas = res.data//.sort((a,b) => a.nome.localeCompare(b.nome));
                 setDisciplinas(disciplinas);
 
@@ -212,6 +242,17 @@ function App() {
 
                 const resTurmas = await axios.get(`/route_example/bd_ufv/disciplina/turmas/${curso}/${disciplina}/`);
                 const turmas = resTurmas.data;
+                return {notas, turmas};
+            } catch {
+                return;
+            }
+        };
+
+        const getNotasDisciplinaDepto = async(disciplina) => {
+            try {
+                const resNotas = await axios.get(`/route_example/bd_ufv/disciplina/${disciplina}/`);
+                const notas = resNotas.data.sort((a,b) => a.nome.localeCompare(b.nome))[0];
+
                 return {notas, turmas};
             } catch {
                 return;
@@ -247,6 +288,7 @@ function App() {
             setTurmas([]);
             setNotas([]);
             setSelectedDisciplina(undefined);
+            setDisciplinaCursoDepto('Curso');
             if(e.target.value === "") {
                 setSelectedCurso(undefined);
 
@@ -268,20 +310,34 @@ function App() {
             if(e.target.value === "") {
                 setSelectedDisciplina(undefined);
 
-                setGrafico(disciplinasCursoToGraph(disciplinas, selectedCampus.nome, selectedCurso.nome));
+                if(disciplinaCursoDepto.localeCompare('Curso') === 0) {
+                    setGrafico(disciplinasCursoToGraph(disciplinas, selectedCampus.nome, selectedCurso.nome));
+                }
+
+                if(disciplinaCursoDepto.localeCompare('Depto') === 0) {
+                    setGrafico(disciplinasDeptoToGraph(disciplinas, selectedDepto.nome));
+                }
                 return;
             }
 
             const disciplinaSelecionada = disciplinas.find(disciplina => disciplina.CodDisc === e.target.value);
             setSelectedDisciplina(disciplinaSelecionada);
-            
-            const disciplinaNotas = await getNotasDisciplina(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
-            console.log(disciplinaNotas);
-            setGrafico(turmasDisciplinaToGraph(disciplinaNotas, disciplinaSelecionada.nome, selectedCampus.nome, selectedCurso.nome));
 
-            setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome + ' (Todos semestres)', selectedCurso.nome));
-            setTurmas(disciplinaNotas.turmas);
-            setNotas(disciplinaNotas.notas);
+            if(disciplinaCursoDepto.localeCompare('Curso') === 0){                
+                const disciplinaNotas = await getNotasDisciplina(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
+                console.log(disciplinaNotas);
+                setGrafico(turmasDisciplinaToGraph(disciplinaNotas, disciplinaSelecionada.nome, selectedCampus.nome, selectedCurso.nome));
+
+                setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome + ' (Todos semestres)', selectedCurso.nome));
+                setTurmas(disciplinaNotas.turmas);
+                setNotas(disciplinaNotas.notas);
+            }
+
+            if(disciplinaCursoDepto.localeCompare('Depto') === 0) {
+                const disciplinaNotas = await getNotasDisciplinaDepto(disciplinaSelecionada.CodDisc);
+                console.log(disciplinaNotas);
+                setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome + ' (Todos semestres)'));
+            }
         };
 
         const handleChangeTurmasSelect = async (e) => {
@@ -298,19 +354,29 @@ function App() {
         };
 
         const handleChangeDeptosSelect = async (e) => {
+            setSelectedCurso(undefined);
+            setDisciplinas([]);
+            setTurmas([]);
+            setNotas([]);
+            setSelectedDisciplina(undefined);
+
+            setDisciplinaCursoDepto('Depto');
             if(e.target.value === "") {
                 setSelectedDepto(undefined);
+
+                setGrafico(cursosCampusToGraph(cursos, selectedCampus.nome));
                 return;
             }
 
-            let departamentos;
             if(e.target.value.localeCompare('Todos') === 0) {
-               departamentos = await getDepartamentosAprov();
+               const departamentos = await getDepartamentosAprov();
                setGrafico(departamentosToGraph(departamentos));
             } else {
-                console.log(e.target.value);
+                console.log(departamentos, e.target.value);
                 const deptoSelecionado = departamentos.find(depto => depto.SiglaDepto == e.target.value);
-                console.log(deptoSelecionado);
+                const disciplinasDepto = await getDepartamento(deptoSelecionado.SiglaDepto)
+                console.log(disciplinasDepto);
+                setGrafico(disciplinasDeptoToGraph(disciplinasDepto, deptoSelecionado.nome));
                 setSelectedDepto(deptoSelecionado);
                 console.log(selectedDepto);
             }
@@ -351,9 +417,9 @@ function App() {
 
                 <Modal
                     isOpen={modalDeptoOpen}
-                    contentLabel={selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.Nome}
+                    contentLabel={selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.nome}
                 >
-                    <h1>{selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.Nome}</h1>
+                    <h1>{selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.nome}</h1>
                     <button onClick={closeDeptoModal}>Fechar</button>
                     <div className="modalContent">
                         <h2>Contatos: </h2>
@@ -415,28 +481,28 @@ function App() {
                         </div>
                     </div>
                     
-                    { selectedCampus?.SiglaCamp == "CAV" ?
+                    { selectedCampus?.SiglaCamp == "CAV" && !selectedCurso ?
                     <select className="departamentos" onChange={handleChangeDeptosSelect}>
                         <option value="">Selecione um Departamento</option>
-                        {departamentos.map((x) => x).length > 0 ? 
+                        {departamentos.length > 0 ? 
                             [<option value="Todos">Todos</option>].concat(
-                            departamentos.sort((a,b) => a.Nome.localeCompare(b.Nome)).map(depto => 
-                                <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.Nome}</option>
+                            departamentos.sort((a,b) => a.nome.localeCompare(b.nome)).map(depto => 
+                                <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.nome}</option>
                             )) : 
                             <option value="">Carregando...</option>
                         }
                     </select> : ''
                     }
                     
-                    <select className="cursos" onChange={handleChangeCursosSelect}>
+                    {!selectedDepto && <select className="cursos" onChange={handleChangeCursosSelect}>
                         <option value="">Selecione um Curso</option>
                         {cursos.length > 0 ? 
-                            cursos.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map(curso => 
+                            cursos.sort((a,b) => a.nome.localeCompare(b.nome)).map(curso => 
                                 <option key={curso.CodCurso} value={curso.CodCurso}>{curso.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
                         }
-                    </select>
+                    </select>}
 
                     <select className="disciplinas" onChange={handleChangeDisciplinasSelect}>
                         <option value="">Selecione uma Disciplina</option>
