@@ -150,12 +150,20 @@ function App() {
         const [modalSemTurmaOpen, setModalSemTurmaOpen] = useState(false);
 
         
-        const getSemTurmas = async() =>{
-
-        };
-
         const [disciplinaCursoDepto, setDisciplinaCursoDepto] = useState('');
 
+        
+        const getSemTurmas = async() =>{
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/sem_turma`);
+                const st = res.data;
+
+                setSemTurmas(st);
+            } catch {
+                return;
+            }
+        };
+        
         const getCampi = async() => {
             try {
                 const res = await axios.get(`/route_example/bd_ufv`);
@@ -431,13 +439,8 @@ function App() {
                     isOpen={modalDeptoOpen}
                     contentLabel={selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.nome}
                 >
-<<<<<<< HEAD
-                    <h1>{selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.Nome}</h1>
-                    <button className="modalButton" onClick={closeDeptoModal}>Fechar</button>
-=======
                     <h1>{selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.nome}</h1>
                     <button onClick={closeDeptoModal}>Fechar</button>
->>>>>>> efd9257601f27c5f020fe1d15429e5ba0e0087e7
                     <div className="modalContent">
                         <h2>Contatos: </h2>
                         <ul>
@@ -455,10 +458,15 @@ function App() {
                 <Modal
                     isOpen={modalSemTurmaOpen}
                 >
-                    <h1>As seguintes disciplinas e seus períodos ainda não possuem turmas registradas no sistema:</h1>
+                    <h1>As seguintes disciplinas nos seguintes anos ainda não possuem turmas registradas no sistema:</h1>
+                    <button className="modalButton" onClick={closeSemTurmaModal}>Fechar</button>
                     <div className="modalContent">
                         <ul>
-                            
+                            {semTurmas.length > 0 ?
+                                semTurmas.map((st) =>
+                                    <li>{st.CodDisc} - {st.nome} ({st.Ano})</li>
+                                ) : 'Carregando...'
+                            }
                         </ul>
                     </div>
                 </Modal>
@@ -514,13 +522,8 @@ function App() {
                         <option value="">Selecione um Departamento</option>
                         {departamentos.length > 0 ? 
                             [<option value="Todos">Todos</option>].concat(
-<<<<<<< HEAD
-                            departamentos.map((x) => x).sort((a,b) => a.Nome.localeCompare(b.Nome)).map(depto => 
-                                <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.Nome}</option>
-=======
-                            departamentos.sort((a,b) => a.nome.localeCompare(b.nome)).map(depto => 
+                            departamentos.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map(depto => 
                                 <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.nome}</option>
->>>>>>> efd9257601f27c5f020fe1d15429e5ba0e0087e7
                             )) : 
                             <option value="">Carregando...</option>
                         }
@@ -597,7 +600,11 @@ function App() {
                     />
                 </div>
 
-                <div className="info">
+                <div style={{float: 'right', 'text-align': 'center', margin: '5px auto 5px auto', width: '40%'}}>
+                    <a style={{cursor: 'pointer'}} onClick={openSemTurmaModal}>Veja quais turmas ainda não possuem registro neste banco</a>
+                </div>
+                
+                <div className="info" style={{float: 'left', width: '40%'}}>
                     Info:
 
                     <div className="infoCampus">
@@ -611,6 +618,7 @@ function App() {
                     }
                     </div> 
                 </div>
+                
             </div>
         );
 }
