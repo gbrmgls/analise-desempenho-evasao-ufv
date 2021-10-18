@@ -496,16 +496,19 @@ function App() {
                     
                     <div className="selectCampus">
                         <div className="toggleOptions" onClick={() => setDisplayCampusOptions(!displayCampusOptions)}>
-                                <div className="foto">
-                                    {
-                                        selectedCampus !== undefined ?
-                                            <img src={selectedCampus.Foto} alt="" />
-                                        : <></>
-                                    }
-                                </div>
-                                <div className="nome">
-                                    {selectedCampus !== undefined ? selectedCampus.SiglaCamp : ''}
-                                </div>
+                                {campi.length > 0 && selectedCampus !== undefined &&
+                                    <div className="foto">                                        
+                                        <img src={selectedCampus.Foto} alt="" />
+                                    </div>
+                                }
+                                {campi.length > 0 && selectedCampus !== undefined ? 
+                                    <div className="nome">
+                                        {selectedCampus.SiglaCamp}
+                                    </div> :
+                                    <div className="nome" style={{ width: 'unset', marginLeft: 'auto', marginRight: 'auto' }}>
+                                        {campi.length > 0 ? 'Selecione um campus' : 'Carregando...' }
+                                    </div>
+                                }
                         </div>  
                         <div className="options" style={{'display' : displayCampusOptions? 'flex' : 'none'}}>
                             <div className="campus" onClick={() => (handleChangeCampiSelect(''), setDisplayCampusOptions(!displayCampusOptions))}>
