@@ -26,7 +26,7 @@ router.get("/bd_ufv", (req, res, next) => {
 
 // Consulta envolvendo a junção de apenas duas relações
 router.get("/bd_ufv/curso/:curso", (req, res, next) => {
-    db.raw(`SELECT Disciplina.CodDisc, Disciplina.Nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
+    db.raw(`SELECT Disciplina.CodDisc, Disciplina.nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
             FROM Turma
             JOIN Disciplina
             ON Turma.CodDisc = Disciplina.CodDisc
@@ -72,7 +72,7 @@ router.get("/bd_ufv/curso/:curso/min", (req, res, next) => {
 
 // Consulta envolvendo apenas as operações de seleção e projeção
 router.get("/bd_ufv/departamento/", (req, res, next) => {
-    db.raw(`SELECT Departamento.SiglaDepto, Departamento.Nome 
+    db.raw(`SELECT Departamento.SiglaDepto, Departamento.nome 
             FROM Departamento`)
         .then((data) => {
             res.send(data[0]);
@@ -97,7 +97,7 @@ router.get("/bd_ufv/departamento/contatos", (req, res, next) => {
 
 // Consulta envolvendo a junção de três ou mais relações
 router.get("/bd_ufv/departamento/aprovacao", (req, res, next) => {
-    db.raw(`SELECT Departamento.Nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
+    db.raw(`SELECT Departamento.nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
             FROM Departamento
             JOIN Disciplina
             ON Departamento.SiglaDepto = Disciplina.SiglaDepto
@@ -115,7 +115,7 @@ router.get("/bd_ufv/departamento/aprovacao", (req, res, next) => {
 
 // Consulta envolvendo funções de agregação
 router.get("/bd_ufv/departamento/:depto", (req, res, next) => {
-    db.raw(`SELECT Disciplina.CodDisc, Disciplina.Nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
+    db.raw(`SELECT Disciplina.CodDisc, Disciplina.nome, sum(Turma.NumEstudantes), sum(Turma.Aprovados) 
             FROM Disciplina
             JOIN Turma
             ON Turma.CodDisc = Disciplina.CodDisc
@@ -185,6 +185,19 @@ router.get("/bd_ufv/disciplina/turmas/:curso/:disciplina/", (req, res, next) => 
         })
 });
 
+router.get("/bd_ufv/disciplina/:disciplina/", (req, res, next) => {
+    db.raw(`SELECT Turma.CodDisc, sum(Turma.Notas0a10), sum(Turma.Notas10a20), sum(Turma.Notas20a30), sum(Turma.Notas30a40), sum(Turma.Notas40a50), sum(Turma.Notas50a60), sum(Turma.Notas60a70), sum(Turma.Notas70a80), sum(Turma.Notas80a90), sum(Turma.Notas90a100)
+            FROM Turma
+            WHERE Turma.CodDisc = '${req.params.disciplina}'
+            GROUP BY Turma.CodDisc`)
+        .then((data) => {
+            res.send(data[0]);
+        }).catch(err => {
+            console.log(err)
+            res.send(err);
+        })
+});
+
 // Consulta envolvendo funções de agregação
 router.get("/bd_ufv/disciplina/:curso/:disciplina/", (req, res, next) => {
     db.raw(`SELECT Turma.CodDisc, Turma.CodCurso, sum(Turma.Notas0a10), sum(Turma.Notas10a20), sum(Turma.Notas20a30), sum(Turma.Notas30a40), sum(Turma.Notas40a50), sum(Turma.Notas50a60), sum(Turma.Notas60a70), sum(Turma.Notas70a80), sum(Turma.Notas80a90), sum(Turma.Notas90a100)
@@ -239,27 +252,6 @@ router.get("/bd_ufv/:campus", (req, res, next) => {
             ON Turma.CodCurso = Curso.CodCurso
             WHERE Campus.SiglaCamp = "${req.params.campus}"
             GROUP BY Curso.CodCurso
-            ORDER BY sum(Turma.Aprovados)/sum(Turma.NumEstudantes)`)
-        .then((data) => {
-            res.send(data[0]);
-        }).catch(err => {
-            console.log(err)
-            res.send(err);
-        })
-});
-
-router.get("/bd_ufv/:campus/:curso", (req, res, next) => {
-    db.raw(`SELECT Disciplina.CodDisc, Disciplina.nome, SUM(Turma.NumEstudantes), SUM(Turma.Aprovados) 
-            FROM Campus 
-            JOIN Curso 
-            ON Campus.SiglaCamp = Curso.SiglaCamp
-            JOIN Turma
-            ON Turma.CodCurso = Curso.CodCurso
-            JOIN Disciplina
-            ON Turma.CodDisc = Disciplina.CodDisc
-            WHERE Campus.SiglaCamp = "${req.params.campus}" 
-            AND Curso.CodCurso = "${req.params.curso}"
-            GROUP BY Turma.CodDisc, Disciplina.nome
             ORDER BY sum(Turma.Aprovados)/sum(Turma.NumEstudantes)`)
         .then((data) => {
             res.send(data[0]);
