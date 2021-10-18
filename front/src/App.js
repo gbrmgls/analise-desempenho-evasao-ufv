@@ -289,6 +289,7 @@ function App() {
             setSelectedCurso(undefined);
             setSelectedDisciplina(undefined);
             setSelectedDepto(undefined);
+            setMinTurma(undefined);
             setCursos([]);
             setDisciplinas([]);
             setTurmas([]);
@@ -314,6 +315,7 @@ function App() {
             setTurmas([]);
             setNotas([]);
             setSelectedDisciplina(undefined);
+            setMinTurma(undefined);
             setDisciplinaCursoDepto('Curso');
             if(e.target.value === "") {
                 setSelectedCurso(undefined);
@@ -385,6 +387,7 @@ function App() {
             setDisciplinas([]);
             setTurmas([]);
             setNotas([]);
+            setMinTurma(undefined);
             setSelectedDisciplina(undefined);
 
             setDisciplinaCursoDepto('Depto');
