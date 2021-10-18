@@ -102,6 +102,7 @@ function App() {
         const [departamentos, setDepartamentos] = useState([]);
         const [contatos, setContatos] = useState([]);
         const [foto, setFoto] = useState('');
+        const [semTurmas, setSemTurmas] = useState([]);
 
         const [selectedCampus, setSelectedCampus] = useState(undefined);
         const [selectedDepto, setSelectedDepto] = useState(undefined);
@@ -113,6 +114,13 @@ function App() {
 
         const [modalCampusOpen, setModalCampusOpen] = useState(false);
         const [modalDeptoOpen, setModalDeptoOpen] = useState(false);
+        
+        const [modalSemTurmaOpen, setModalSemTurmaOpen] = useState(false);
+
+        
+        const getSemTurmas = async() =>{
+
+        };
 
         const getCampi = async() => {
             try {
@@ -291,10 +299,14 @@ function App() {
         const openDeptoModal = () => setModalDeptoOpen(true);
         const closeDeptoModal = () => setModalDeptoOpen(false);
 
+        const openSemTurmaModal = () => setModalSemTurmaOpen(true);
+        const closeSemTurmaModal = () => setModalSemTurmaOpen(false);
+
         useEffect(() => {
             getCampi();
             getDepartamentos();
             getContatos();
+            getSemTurmas();
         }, []);
 
         return (
@@ -304,7 +316,7 @@ function App() {
                     contentLabel={selectedCampus == undefined ? "Selecione um campus" : selectedCampus.SiglaCamp + " - " + selectedCampus.nome}
                 >
                     <h1>{selectedCampus == undefined ? "Selecione um campus" : selectedCampus.SiglaCamp + " - " + selectedCampus.nome}</h1>
-                    <button onClick={closeCampusModal}>Fechar</button>
+                    <button className="modalButton" onClick={closeCampusModal}>Fechar</button>
                     <div className="modalContent">
                         <div className="modalFoto">
                                     {
@@ -322,7 +334,7 @@ function App() {
                     contentLabel={selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.Nome}
                 >
                     <h1>{selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.Nome}</h1>
-                    <button onClick={closeDeptoModal}>Fechar</button>
+                    <button className="modalButton" onClick={closeDeptoModal}>Fechar</button>
                     <div className="modalContent">
                         <h2>Contatos: </h2>
                         <ul>
@@ -333,6 +345,17 @@ function App() {
                                     return <li>{"(31) " + strtel.substring(0,4) + "-" + strtel.substring(4)}</li>
                                 }) : "Esse departamento não possui contatos."
                             }
+                        </ul>
+                    </div>
+                </Modal>
+
+                <Modal
+                    isOpen={modalSemTurmaOpen}
+                >
+                    <h1>As seguintes disciplinas e seus períodos ainda não possuem turmas registradas no sistema:</h1>
+                    <div className="modalContent">
+                        <ul>
+                            
                         </ul>
                     </div>
                 </Modal>
@@ -386,9 +409,9 @@ function App() {
                     { selectedCampus?.SiglaCamp == "CAV" ?
                     <select className="departamentos" onChange={handleChangeDeptosSelect}>
                         <option value="">Selecione um Departamento</option>
-                        {departamentos.map((x) => x).length > 0 ? 
+                        {departamentos.length > 0 ? 
                             [<option value="Todos">Todos</option>].concat(
-                            departamentos.sort((a,b) => a.Nome.localeCompare(b.Nome)).map(depto => 
+                            departamentos.map((x) => x).sort((a,b) => a.Nome.localeCompare(b.Nome)).map(depto => 
                                 <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.Nome}</option>
                             )) : 
                             <option value="">Carregando...</option>
@@ -409,7 +432,7 @@ function App() {
                     <select className="disciplinas" onChange={handleChangeDisciplinasSelect}>
                         <option value="">Selecione uma Disciplina</option>
                         {disciplinas.length > 0 ? 
-                            disciplinas.map((disciplina, index) => 
+                            disciplinas.map((x) => x).sort((a,b) => a.nome.localeCompare(b.nome)).map((disciplina, index) => 
                                 <option key={disciplina.CodDisc + `${index}`} value={disciplina.CodDisc}>{disciplina.nome}</option>
                             ) : 
                             <option value="">Carregando...</option>
@@ -419,7 +442,7 @@ function App() {
                     {turmas.length > 0 && 
                         <select className="turmas" onChange={handleChangeTurmasSelect}>
                             <option value="">Selecione um semestre</option>
-                            {turmas.map((turma, index) => 
+                            {turmas.map((x) => x).sort().map((turma, index) => 
                                 <option key={index} value={turma.Ano+'+'+turma.Semestre}>{`${turma.Ano}/${turma.Semestre}`}</option>
                             )}
 
