@@ -142,19 +142,20 @@ function App() {
         const [selectedDisciplina, setSelectedDisciplina] = useState(undefined);
         const [selectedTurma, setSelectedTurma] = useState(undefined);
 
+        const [disciplinaCursoDepto, setDisciplinaCursoDepto] = useState('');
+        const [minTurma, setMinTurma] = useState(undefined);
+
         const [grafico, setGrafico] = useState(initialGraph);
 
         const [modalCampusOpen, setModalCampusOpen] = useState(false);
         const [modalDeptoOpen, setModalDeptoOpen] = useState(false);
         
         const [modalSemTurmaOpen, setModalSemTurmaOpen] = useState(false);
-
         
         const getSemTurmas = async() =>{
 
         };
 
-        const [disciplinaCursoDepto, setDisciplinaCursoDepto] = useState('');
 
         const getCampi = async() => {
             try {
@@ -267,6 +268,17 @@ function App() {
             }
         };
 
+        const getMinAprovado = async(curso, disciplina) => {
+            try {
+                const resMin = await axios.get(`route_example/bd_ufv/disciplina/${curso}/${disciplina}/min`);
+                const min = resMin.data[0];
+
+                return min;
+            } catch {
+                return;
+            }
+        };
+
         const handleChangeCampiSelect = async (e) => {
             setSelectedCurso(undefined);
             setSelectedDisciplina(undefined);
@@ -315,6 +327,7 @@ function App() {
         const handleChangeDisciplinasSelect = async (e) => {
             setTurmas([]);
             setNotas([]);
+            setMinTurma(undefined);
             if(e.target.value === "") {
                 setSelectedDisciplina(undefined);
 
@@ -333,17 +346,17 @@ function App() {
 
             if(disciplinaCursoDepto.localeCompare('Curso') === 0){                
                 const disciplinaNotas = await getNotasDisciplina(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
-                console.log(disciplinaNotas);
-                setGrafico(turmasDisciplinaToGraph(disciplinaNotas, disciplinaSelecionada.nome, selectedCampus.nome, selectedCurso.nome));
 
                 setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome + ' (Todos semestres)', selectedCurso.nome));
                 setTurmas(disciplinaNotas.turmas);
                 setNotas(disciplinaNotas.notas);
+
+                const minAprovado = await getMinAprovado(selectedCurso.CodCurso, disciplinaSelecionada.CodDisc);
+                setMinTurma(minAprovado);
             }
 
             if(disciplinaCursoDepto.localeCompare('Depto') === 0) {
                 const disciplinaNotas = await getNotasDisciplinaDepto(disciplinaSelecionada.CodDisc);
-                console.log(disciplinaNotas);
                 setGrafico(turmasDisciplinaToGraph(disciplinaNotas.notas, disciplinaSelecionada.nome, selectedCampus.nome + ' (Todos semestres)'));
             }
         };
@@ -431,13 +444,8 @@ function App() {
                     isOpen={modalDeptoOpen}
                     contentLabel={selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.nome}
                 >
-<<<<<<< HEAD
-                    <h1>{selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.Nome}</h1>
-                    <button className="modalButton" onClick={closeDeptoModal}>Fechar</button>
-=======
                     <h1>{selectedDepto == undefined ? "Selecione um departamento" : selectedDepto.SiglaDepto + " - " + selectedDepto.nome}</h1>
-                    <button onClick={closeDeptoModal}>Fechar</button>
->>>>>>> efd9257601f27c5f020fe1d15429e5ba0e0087e7
+                    <button className="modalButton" onClick={closeDeptoModal}>Fechar</button>
                     <div className="modalContent">
                         <h2>Contatos: </h2>
                         <ul>
@@ -514,13 +522,8 @@ function App() {
                         <option value="">Selecione um Departamento</option>
                         {departamentos.length > 0 ? 
                             [<option value="Todos">Todos</option>].concat(
-<<<<<<< HEAD
-                            departamentos.map((x) => x).sort((a,b) => a.Nome.localeCompare(b.Nome)).map(depto => 
-                                <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.Nome}</option>
-=======
                             departamentos.sort((a,b) => a.nome.localeCompare(b.nome)).map(depto => 
                                 <option key={depto.SiglaDepto} value={depto.SiglaDepto}>{depto.nome}</option>
->>>>>>> efd9257601f27c5f020fe1d15429e5ba0e0087e7
                             )) : 
                             <option value="">Carregando...</option>
                         }
@@ -595,6 +598,11 @@ function App() {
                             },
                         }}
                     />
+                    {minTurma && 
+                        <p style={{textAlign: 'left'}}>
+                            A turma de {minTurma.Ano}/{minTurma.Semestre} possui a menor taxa de aprovação na disciplina {selectedDisciplina.nome}
+                        </p>
+                    }
                 </div>
 
                 <div className="info">
