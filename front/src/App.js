@@ -153,10 +153,16 @@ function App() {
         const [modalSemTurmaOpen, setModalSemTurmaOpen] = useState(false);
         
         const getSemTurmas = async() =>{
+            try {
+                const res = await axios.get(`/route_example/bd_ufv/sem_turma`);
+                const st = res.data;
 
+                setSemTurmas(st);
+            } catch {
+                return;
+            }
         };
-
-
+        
         const getCampi = async() => {
             try {
                 const res = await axios.get(`/route_example/bd_ufv`);
@@ -463,10 +469,15 @@ function App() {
                 <Modal
                     isOpen={modalSemTurmaOpen}
                 >
-                    <h1>As seguintes disciplinas e seus períodos ainda não possuem turmas registradas no sistema:</h1>
+                    <h1>As seguintes disciplinas nos seguintes anos ainda não possuem turmas registradas no sistema:</h1>
+                    <button className="modalButton" onClick={closeSemTurmaModal}>Fechar</button>
                     <div className="modalContent">
                         <ul>
-                            
+                            {semTurmas.length > 0 ?
+                                semTurmas.map((st) =>
+                                    <li>{st.CodDisc} - {st.nome} ({st.Ano})</li>
+                                ) : 'Carregando...'
+                            }
                         </ul>
                     </div>
                 </Modal>
@@ -605,7 +616,11 @@ function App() {
                     }
                 </div>
 
-                <div className="info">
+                <div style={{float: 'right', 'text-align': 'center', margin: '5px auto 5px auto', width: '40%'}}>
+                    <a style={{cursor: 'pointer'}} onClick={openSemTurmaModal}>Veja quais turmas ainda não possuem registro neste banco</a>
+                </div>
+                
+                <div className="info" style={{float: 'left', width: '40%'}}>
                     Info:
 
                     <div className="infoCampus">
@@ -619,6 +634,7 @@ function App() {
                     }
                     </div> 
                 </div>
+                
             </div>
         );
 }
